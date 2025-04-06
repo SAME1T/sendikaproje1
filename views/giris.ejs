@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Giriş Yap - Sendika İletişim Merkezi</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="/css/style.css">
+    <style>
+        .logo-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 15px;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 10px;
+            margin-bottom: 30px;
+        }
+        .logo-item {
+            width: 100%;
+            height: auto;
+            max-width: 100px;
+            margin: auto;
+            display: block;
+            transition: transform 0.3s ease;
+        }
+        .logo-item:hover {
+            transform: scale(1.1);
+        }
+        @media (max-width: 768px) {
+            .logo-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+    </style>
+</head>
+<body class="login-page">
+    <!-- Türk Bayrağı -->
+    <img src="https://upload.wikimedia.org/wikipedia/commons/b/b4/Flag_of_Turkey.svg" alt="Türk Bayrağı" class="turkish-flag">
+
+    <!-- Analog Saat -->
+    <div class="clock-container">
+        <div class="analog-clock">
+            <div class="hand hour-hand"></div>
+            <div class="hand minute-hand"></div>
+            <div class="hand second-hand"></div>
+            <div class="clock-center"></div>
+        </div>
+    </div>
+
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container">
+            <a class="navbar-brand" href="/">Sendika İletişim Merkezi</a>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-md-10 mb-4">
+                <div class="logo-grid">
+                    <img src="https://www.birlikegitimsen.org.tr/wp-content/uploads/2021/01/logo.png" alt="Birlik Eğitim Sen" class="logo-item">
+                    <img src="https://www.sagliksen.org.tr/cdn/uploads/2019/05/logo.png" alt="Sağlık Sen" class="logo-item">
+                    <img src="https://www.diyanetsen.org.tr/upload/images/subeler/logo.png" alt="Diyanet Sen" class="logo-item">
+                    <img src="https://www.tocsagliksen.org.tr/assets/images/logo.png" alt="TOÇ Sağlık Sen" class="logo-item">
+                    <img src="https://www.egitimbirsen.org.tr/Assets/images/logo.png" alt="Eğitim Bir Sen" class="logo-item">
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="login-container">
+                    <h2 class="text-center mb-4">Sendika İletişim Merkezi</h2>
+                    <h4 class="text-center text-muted mb-4">Giriş Yap</h4>
+                    
+                    <% if (typeof error !== 'undefined' && error) { %>
+                        <div class="alert alert-danger" role="alert">
+                            <%= error %>
+                        </div>
+                    <% } %>
+
+                    <form action="/giris" method="POST">
+                        <div class="mb-4">
+                            <label for="email" class="form-label">E-posta Adresi</label>
+                            <input type="email" class="form-control form-control-lg" id="email" name="email" required>
+                        </div>
+                        <div class="mb-4">
+                            <label for="password" class="form-label">Şifre</label>
+                            <input type="password" class="form-control form-control-lg" id="password" name="password" required>
+                        </div>
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary btn-lg">Giriş Yap</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer class="text-white py-4 mt-5">
+        <div class="container text-center">
+            <p class="mb-0">&copy; 2024 Sendika İletişim Merkezi. Tüm hakları saklıdır.</p>
+        </div>
+    </footer>
+
+    <script>
+        function updateClock() {
+            const now = new Date();
+            const hours = now.getHours();
+            const minutes = now.getMinutes();
+            const seconds = now.getSeconds();
+
+            const hourDeg = (hours % 12 + minutes / 60) * 30;
+            const minuteDeg = minutes * 6;
+            const secondDeg = seconds * 6;
+
+            document.querySelector('.hour-hand').style.transform = `rotate(${hourDeg}deg)`;
+            document.querySelector('.minute-hand').style.transform = `rotate(${minuteDeg}deg)`;
+            document.querySelector('.second-hand').style.transform = `rotate(${secondDeg}deg)`;
+        }
+
+        // Saati her saniye güncelle
+        setInterval(updateClock, 1000);
+        updateClock(); // İlk yükleme
+    </script>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html> 

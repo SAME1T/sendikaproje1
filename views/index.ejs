@@ -1,0 +1,807 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>İşçi Hakları ve Sendika İletişim Merkezi</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="/css/style.css">
+    <style>
+        .stats-container {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 20px;
+            border-radius: 15px;
+            margin: 20px 0;
+        }
+        .stats-header {
+            display: flex;
+            align-items: center;
+            color: var(--primary-color);
+            margin-bottom: 15px;
+        }
+        .stats-header i {
+            font-size: 24px;
+        }
+        .stats-header h5 {
+            margin: 0;
+            font-weight: 600;
+        }
+        .stats-divider {
+            height: 3px;
+            background: var(--primary-color);
+            margin-bottom: 20px;
+            border-radius: 2px;
+            opacity: 0.7;
+        }
+        .vertical-divider {
+            width: 3px;
+            height: 100%;
+            background: var(--primary-color);
+            opacity: 0.3;
+            border-radius: 2px;
+        }
+        .stat-card {
+            background: #fff;
+            border-radius: 10px;
+            padding: 15px;
+            margin: 10px 0;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            transition: transform 0.2s;
+            border-left: 4px solid var(--primary-color);
+        }
+        .stat-card.worker {
+            border-left-color: #800020;
+        }
+        .stat-card.public {
+            border-left-color: #4a0012;
+        }
+        .stat-card:hover {
+            transform: translateY(-5px);
+        }
+        .stat-type {
+            font-size: 0.8rem;
+            color: #666;
+            text-transform: uppercase;
+            margin-bottom: 5px;
+        }
+        .stat-title {
+            font-size: 0.9rem;
+            color: #333;
+            margin-bottom: 10px;
+            min-height: 40px;
+        }
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: var(--primary-color);
+        }
+        .worker-stats .stat-value {
+            color: #800020;
+        }
+        .public-stats .stat-value {
+            color: #4a0012;
+        }
+        .table th {
+            background-color: var(--primary-color);
+            color: white;
+            font-weight: 500;
+        }
+        .table-hover tbody tr:hover {
+            background-color: rgba(128, 0, 32, 0.05);
+        }
+        .table td {
+            vertical-align: middle;
+        }
+        .card-header {
+            background-color: var(--primary-color) !important;
+        }
+        .table-primary {
+            background-color: rgba(128, 0, 32, 0.1) !important;
+        }
+        @media (max-width: 768px) {
+            .vertical-divider {
+                display: none;
+            }
+            .worker-stats, .public-stats {
+                margin-bottom: 20px;
+            }
+            .stats-container {
+                padding: 15px;
+            }
+        }
+        /* Üye sayısı çubuk grafik stilleri */
+        .member-bar {
+            height: 20px;
+            background-color: var(--primary-color);
+            opacity: 0.8;
+            border-radius: 4px;
+            margin-left: 10px;
+            transition: width 0.3s ease;
+        }
+        
+        .member-count-cell {
+            display: flex;
+            align-items: center;
+            padding-right: 20px !important;
+        }
+
+        .member-count {
+            min-width: 80px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Side Panel -->
+    <div class="side-panel">
+        <ul class="side-menu">
+            <li class="side-menu-item">
+                <a href="/anketler" class="side-menu-link">
+                    <i class="fas fa-poll"></i>
+                    Anketler
+                </a>
+            </li>
+            <li class="side-menu-item">
+                <a href="/grev-kararlari" class="side-menu-link">
+                    <i class="fas fa-fist-raised"></i>
+                    Grev Kararları
+                </a>
+            </li>
+            <li class="side-menu-item">
+                <a href="/toplantilar" class="side-menu-link">
+                    <i class="fas fa-users"></i>
+                    Toplantılar
+                </a>
+            </li>
+            <li class="side-menu-item">
+                <a href="/eylem-planlari" class="side-menu-link">
+                    <i class="fas fa-bullhorn"></i>
+                    Eylem Planları
+                </a>
+            </li>
+            <li class="side-menu-item">
+                <a href="/duyurular" class="side-menu-link">
+                    <i class="fas fa-bell"></i>
+                    Duyurular
+                </a>
+            </li>
+            <li class="side-menu-item">
+                <a href="/iletisim" class="side-menu-link">
+                    <i class="fas fa-envelope"></i>
+                    İletişim
+                </a>
+            </li>
+            <li class="side-menu-item">
+                <a href="/etkinlikler" class="side-menu-link">
+                    <i class="fas fa-calendar-alt"></i>
+                    Etkinlikler
+                </a>
+            </li>
+            <li class="side-menu-item dropdown">
+                <a href="#" class="side-menu-link login-btn" id="sideLoginDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                    <i class="fas fa-sign-in-alt"></i>
+                    Giriş Yap
+                </a>
+                <ul class="dropdown-menu side-dropdown" aria-labelledby="sideLoginDropdown">
+                    <li><a class="dropdown-item" href="/giris/sendikaci">Sendikacı Girişi</a></li>
+                    <li><a class="dropdown-item" href="/giris/isci">İşçi Girişi</a></li>
+                    <li><hr class="dropdown-divider"></li>
+                    <li><a class="dropdown-item" href="/uye-ol">Üye Ol</a></li>
+                </ul>
+            </li>
+        </ul>
+    </div>
+
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/b/b4/Flag_of_Turkey.svg" alt="Türk Bayrağı" class="navbar-flag">
+            <a class="navbar-brand ms-3" href="/">İşçi Hakları ve Sendika İletişim Merkezi</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                </ul>
+                <ul class="navbar-nav align-items-center">
+                    <li class="nav-item">
+                        <div class="navbar-clock">
+                            <div class="digital-clock" id="digitalClock">00:00:00</div>
+                            <div class="date-display" id="dateDisplay">01.01.2024<br>Pazartesi</div>
+                        </div>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <!-- İstatistik Kartları -->
+        <div class="stats-container">
+            <div class="row">
+                <!-- İşçi İstatistikleri -->
+                <div class="col-md-6 worker-stats">
+                    <div class="stats-header">
+                        <i class="fas fa-hard-hat me-2"></i>
+                        <h5 class="mb-3">İŞÇİ İSTATİSTİKLERİ</h5>
+                    </div>
+                    <div class="stats-divider"></div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="stat-card worker">
+                                <div class="stat-type">İŞÇİ</div>
+                                <div class="stat-title">Toplam Sendikalı Oranı</div>
+                                <div class="stat-value">% 14.97</div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="stat-card worker">
+                                <div class="stat-type">İŞÇİ</div>
+                                <div class="stat-title">Güncel Sendika Sayısı</div>
+                                <div class="stat-value">235</div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="stat-card worker">
+                                <div class="stat-type">İŞÇİ</div>
+                                <div class="stat-title">Üye Oranı En Yüksek İşkolu</div>
+                                <div class="stat-value">GENEL İŞLER</div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="stat-card worker">
+                                <div class="stat-type">İŞÇİ</div>
+                                <div class="stat-title">Üye Oranı En Düşük İşkolu</div>
+                                <div class="stat-value">İNŞAAT</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Ayırıcı Çizgi -->
+                <div class="col-md-1 d-none d-md-flex align-items-center justify-content-center">
+                    <div class="vertical-divider"></div>
+                </div>
+
+                <!-- Kamu İstatistikleri -->
+                <div class="col-md-5 public-stats">
+                    <div class="stats-header">
+                        <i class="fas fa-building me-2"></i>
+                        <h5 class="mb-3">KAMU İSTATİSTİKLERİ</h5>
+                    </div>
+                    <div class="stats-divider"></div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="stat-card public">
+                                <div class="stat-type">KAMU</div>
+                                <div class="stat-title">Toplam Sendikalı Oranı</div>
+                                <div class="stat-value">% 75.18</div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="stat-card public">
+                                <div class="stat-type">KAMU</div>
+                                <div class="stat-title">Güncel Sendika Sayısı</div>
+                                <div class="stat-value">242</div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="stat-card public">
+                                <div class="stat-type">KAMU</div>
+                                <div class="stat-title">Üye Oranı En Yüksek İşkolu</div>
+                                <div class="stat-value">YEREL YÖNETİM H.</div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="stat-card public">
+                                <div class="stat-type">KAMU</div>
+                                <div class="stat-title">Üye Oranı En Düşük İşkolu</div>
+                                <div class="stat-value">ENERJİ, SANAYİ</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Üye Sayılarına Göre En Büyük On Sendika -->
+        <div class="card mb-4">
+            <div class="card-header bg-primary text-white d-flex align-items-center">
+                <h5 class="mb-0">
+                    <i class="fas fa-chart-bar me-2"></i>
+                    Üye Sayılarına Göre En Büyük On Sendika
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th scope="col">Sıra No</th>
+                                <th scope="col">İş Kolu No</th>
+                                <th scope="col">Sendika Adı</th>
+                                <th scope="col">Üye Sayısı</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr class="table-primary">
+                                <td>1</td>
+                                <td>12</td>
+                                <td>TÜRK METAL SENDİKASI</td>
+                                <td class="member-count-cell">
+                                    <span class="member-count">293.829</span>
+                                    <div class="member-bar" style="width: 100%;"></div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>2</td>
+                                <td>20</td>
+                                <td>HİZMET-İŞ</td>
+                                <td class="member-count-cell">
+                                    <span class="member-count">280.769</span>
+                                    <div class="member-bar" style="width: 95%;"></div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>3</td>
+                                <td>17</td>
+                                <td>ÖZ SAĞLIK-İŞ</td>
+                                <td class="member-count-cell">
+                                    <span class="member-count">224.289</span>
+                                    <div class="member-bar" style="width: 76%;"></div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>4</td>
+                                <td>20</td>
+                                <td>GENEL-İŞ</td>
+                                <td class="member-count-cell">
+                                    <span class="member-count">171.348</span>
+                                    <div class="member-bar" style="width: 58%;"></div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>5</td>
+                                <td>10</td>
+                                <td>TEZ-KOOP-İŞ</td>
+                                <td class="member-count-cell">
+                                    <span class="member-count">126.431</span>
+                                    <div class="member-bar" style="width: 43%;"></div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>6</td>
+                                <td>20</td>
+                                <td>BELEDİYE-İŞ</td>
+                                <td class="member-count-cell">
+                                    <span class="member-count">126.182</span>
+                                    <div class="member-bar" style="width: 43%;"></div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>7</td>
+                                <td>10</td>
+                                <td>KOOP-İŞ</td>
+                                <td class="member-count-cell">
+                                    <span class="member-count">124.095</span>
+                                    <div class="member-bar" style="width: 42%;"></div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>8</td>
+                                <td>14</td>
+                                <td>TES-İŞ</td>
+                                <td class="member-count-cell">
+                                    <span class="member-count">68.890</span>
+                                    <div class="member-bar" style="width: 23%;"></div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>9</td>
+                                <td>10</td>
+                                <td>ÖZ BÜRO-İŞ</td>
+                                <td class="member-count-cell">
+                                    <span class="member-count">50.901</span>
+                                    <div class="member-bar" style="width: 17%;"></div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>10</td>
+                                <td>13</td>
+                                <td>YOL-İŞ</td>
+                                <td class="member-count-cell">
+                                    <span class="member-count">50.630</span>
+                                    <div class="member-bar" style="width: 17%;"></div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Üye Sayılarına Göre En Büyük On İş Kolu -->
+        <div class="card mb-4">
+            <div class="card-header bg-primary text-white d-flex align-items-center">
+                <h5 class="mb-0">
+                    <i class="fas fa-industry me-2"></i>
+                    İşçi Sayısına Göre En Büyük On İş Kolu
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th scope="col">Sıra No</th>
+                                <th scope="col">İş Kolu No</th>
+                                <th scope="col">İş Kolu Adı</th>
+                                <th scope="col">Üye Sayısı</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr class="table-primary">
+                                <td>1</td>
+                                <td>10</td>
+                                <td>TİCARET, BÜRO, EĞİTİM VE GÜZEL SANATLAR</td>
+                                <td class="member-count-cell">
+                                    <span class="member-count">4.469.945</span>
+                                    <div class="member-bar" style="width: 100%;"></div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>2</td>
+                                <td>12</td>
+                                <td>METAL</td>
+                                <td class="member-count-cell">
+                                    <span class="member-count">1.987.733</span>
+                                    <div class="member-bar" style="width: 44%;"></div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>3</td>
+                                <td>13</td>
+                                <td>İNŞAAT</td>
+                                <td class="member-count-cell">
+                                    <span class="member-count">1.741.475</span>
+                                    <div class="member-bar" style="width: 39%;"></div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>4</td>
+                                <td>18</td>
+                                <td>KONAKLAMA VE EĞLENCE İŞLERİ</td>
+                                <td class="member-count-cell">
+                                    <span class="member-count">1.169.680</span>
+                                    <div class="member-bar" style="width: 26%;"></div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>5</td>
+                                <td>05</td>
+                                <td>DOKUMA, HAZIR GİYİM VE DERİ</td>
+                                <td class="member-count-cell">
+                                    <span class="member-count">1.169.314</span>
+                                    <div class="member-bar" style="width: 26%;"></div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>6</td>
+                                <td>15</td>
+                                <td>TAŞIMACILIK</td>
+                                <td class="member-count-cell">
+                                    <span class="member-count">1.048.014</span>
+                                    <div class="member-bar" style="width: 23%;"></div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>7</td>
+                                <td>20</td>
+                                <td>GENEL İŞLER</td>
+                                <td class="member-count-cell">
+                                    <span class="member-count">991.976</span>
+                                    <div class="member-bar" style="width: 22%;"></div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>8</td>
+                                <td>17</td>
+                                <td>SAĞLIK VE SOSYAL HİZMETLER</td>
+                                <td class="member-count-cell">
+                                    <span class="member-count">761.312</span>
+                                    <div class="member-bar" style="width: 17%;"></div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>9</td>
+                                <td>02</td>
+                                <td>GIDA SANAYİİ</td>
+                                <td class="member-count-cell">
+                                    <span class="member-count">758.601</span>
+                                    <div class="member-bar" style="width: 17%;"></div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>10</td>
+                                <td>04</td>
+                                <td>PETROL, KİMYA, LASTİK, PLASTİK VE İLAÇ</td>
+                                <td class="member-count-cell">
+                                    <span class="member-count">615.122</span>
+                                    <div class="member-bar" style="width: 14%;"></div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Ana Sayfa İçeriği -->
+        <div class="row mt-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-body">
+                        <h2>Hoş Geldiniz</h2>
+                        <p>İşçi Hakları ve Sendika İletişim Merkezi'ne hoş geldiniz. Burada işçi hakları ve sendika ile ilgili tüm işlemlerinizi gerçekleştirebilirsiniz.</p>
+                        <p>Sistemimize üye olarak:</p>
+                        <ul>
+                            <li>İşçi hakları ve yasal düzenlemeler hakkında bilgi alabilir</li>
+                            <li>Sendika faaliyetlerini takip edebilir</li>
+                            <li>Duyurulardan anında haberdar olabilir</li>
+                            <li>Talep ve şikayetlerinizi iletebilir</li>
+                            <li>Diğer üyelerle iletişim kurabilirsiniz</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer class="text-white py-4 mt-5">
+        <div class="container text-center">
+            <p class="mb-0">&copy; 2024 İşçi Hakları ve Sendika İletişim Merkezi. Tüm hakları saklıdır.</p>
+        </div>
+    </footer>
+
+    <!-- Chatbot -->
+    <div class="chatbot-container" id="chatbotContainer">
+        <div class="chatbot-toggle" id="chatbotToggle">
+            <i class="fas fa-comments"></i>
+            <span>SENDİKACI AI</span>
+        </div>
+        <div class="chatbot-box" id="chatbot">
+            <div class="chatbot-header">
+                <h5>SENDİKACI AI</h5>
+                <button class="close-btn" id="closeChatbot">&times;</button>
+            </div>
+            <div class="chatbot-messages" id="chatMessages">
+                <div class="message bot">
+                    Merhaba! Ben SENDİKACI AI. Size nasıl yardımcı olabilirim?
+                    <div class="quick-replies">
+                        <button onclick="sendQuickReply('İşçi Hakları')">İşçi Hakları</button>
+                        <button onclick="sendQuickReply('Sendika Mevzuatı')">Sendika Mevzuatı</button>
+                        <button onclick="sendQuickReply('Şikayet/Talep')">Şikayet/Talep</button>
+                    </div>
+                </div>
+            </div>
+            <div class="chatbot-input">
+                <input type="text" id="userInput" placeholder="Mesajınızı yazın...">
+                <button onclick="sendMessage()">
+                    <i class="fas fa-paper-plane"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Font Awesome için CDN -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
+    <script>
+        // Saat ve Chatbot için ortak sürükleme fonksiyonları
+        function makeDraggable(element, storageKey) {
+            let isDragging = false;
+            let currentX;
+            let currentY;
+            let initialX;
+            let initialY;
+            let xOffset = 0;
+            let yOffset = 0;
+
+            // Kaydedilmiş pozisyonu al
+            const savedPosition = localStorage.getItem(storageKey);
+            if (savedPosition) {
+                const { x, y } = JSON.parse(savedPosition);
+                xOffset = x;
+                yOffset = y;
+                setTranslate(x, y, element);
+            }
+
+            function dragStart(e) {
+                if (e.target.closest('.chatbot-toggle') || e.target.closest('.chatbot-box')) {
+                    return;
+                }
+
+                if (e.type === "touchstart") {
+                    initialX = e.touches[0].clientX - xOffset;
+                    initialY = e.touches[0].clientY - yOffset;
+                } else {
+                    initialX = e.clientX - xOffset;
+                    initialY = e.clientY - yOffset;
+                }
+
+                if (e.target === element || element.contains(e.target)) {
+                    isDragging = true;
+                }
+            }
+
+            function dragEnd(e) {
+                initialX = currentX;
+                initialY = currentY;
+                isDragging = false;
+
+                // Pozisyonu kaydet
+                localStorage.setItem(storageKey, JSON.stringify({
+                    x: xOffset,
+                    y: yOffset
+                }));
+            }
+
+            function drag(e) {
+                if (isDragging) {
+                    e.preventDefault();
+
+                    if (e.type === "touchmove") {
+                        currentX = e.touches[0].clientX - initialX;
+                        currentY = e.touches[0].clientY - initialY;
+                    } else {
+                        currentX = e.clientX - initialX;
+                        currentY = e.clientY - initialY;
+                    }
+
+                    xOffset = currentX;
+                    yOffset = currentY;
+
+                    // Ekran sınırlarını kontrol et
+                    const bounds = element.getBoundingClientRect();
+                    const maxX = window.innerWidth - bounds.width;
+                    const maxY = window.innerHeight - bounds.height;
+
+                    xOffset = Math.min(Math.max(0, xOffset), maxX);
+                    yOffset = Math.min(Math.max(0, yOffset), maxY);
+
+                    setTranslate(xOffset, yOffset, element);
+                }
+            }
+
+            element.addEventListener("touchstart", dragStart, false);
+            element.addEventListener("touchend", dragEnd, false);
+            element.addEventListener("touchmove", drag, false);
+
+            element.addEventListener("mousedown", dragStart, false);
+            document.addEventListener("mousemove", drag, false);
+            document.addEventListener("mouseup", dragEnd, false);
+        }
+
+        function setTranslate(xPos, yPos, el) {
+            el.style.transform = `translate3d(${xPos}px, ${yPos}px, 0)`;
+        }
+
+        // Chatbot fonksiyonları
+        document.addEventListener('DOMContentLoaded', function() {
+            const chatbotToggle = document.getElementById('chatbotToggle');
+            const closeChatbot = document.getElementById('closeChatbot');
+            const chatbot = document.getElementById('chatbot');
+            const chatbotContainer = document.getElementById('chatbotContainer');
+            let isDragging = false;
+
+            // Chatbot'u aç/kapat
+            function toggleChatbot() {
+                chatbot.classList.toggle('active');
+                if (chatbot.classList.contains('active')) {
+                    // Mesajları en alta kaydır
+                    const messagesDiv = document.getElementById('chatMessages');
+                    messagesDiv.scrollTop = messagesDiv.scrollHeight;
+                }
+            }
+
+            // Toggle butonuna tıklama olayı
+            chatbotToggle.addEventListener('click', function(e) {
+                e.stopPropagation();
+                toggleChatbot();
+            });
+
+            // Kapatma butonuna tıklama olayı
+            closeChatbot.addEventListener('click', function(e) {
+                e.stopPropagation();
+                toggleChatbot();
+            });
+
+            // Chatbot dışına tıklandığında kapat
+            document.addEventListener('click', function(e) {
+                if (!chatbotContainer.contains(e.target) && chatbot.classList.contains('active')) {
+                    toggleChatbot();
+                }
+            });
+
+            // Enter tuşu ile mesaj gönderme
+            document.getElementById('userInput').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    sendMessage();
+                }
+            });
+        });
+
+        // Tarih ve saat güncelleme fonksiyonu
+        function updateClock() {
+            const now = new Date();
+            
+            // Dijital saat
+            const hours = String(now.getHours()).padStart(2, '0');
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            const seconds = String(now.getSeconds()).padStart(2, '0');
+            document.getElementById('digitalClock').textContent = `${hours}:${minutes}:${seconds}`;
+            
+            // Tarih
+            const days = ['Pazar', 'Pazartesi', 'Salı', 'Çarşamba', 'Perşembe', 'Cuma', 'Cumartesi'];
+            const day = String(now.getDate()).padStart(2, '0');
+            const month = String(now.getMonth() + 1).padStart(2, '0');
+            const year = now.getFullYear();
+            document.getElementById('dateDisplay').innerHTML = `${day}.${month}.${year}<br>${days[now.getDay()]}`;
+        }
+
+        // Her saniye güncelle
+        setInterval(updateClock, 1000);
+        updateClock(); // Sayfa yüklendiğinde hemen başlat
+
+        // Mesaj gönderme fonksiyonu
+        function sendMessage() {
+            const userInput = document.getElementById('userInput');
+            const message = userInput.value.trim();
+            
+            if (message) {
+                const chatMessages = document.getElementById('chatMessages');
+                
+                // Kullanıcı mesajını ekle
+                const userMessageDiv = document.createElement('div');
+                userMessageDiv.className = 'message user';
+                userMessageDiv.textContent = message;
+                chatMessages.appendChild(userMessageDiv);
+                
+                // Input'u temizle
+                userInput.value = '';
+                
+                // Mesajları en alta kaydır
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+                
+                // Bot yanıtını simüle et
+                setTimeout(() => {
+                    const botMessageDiv = document.createElement('div');
+                    botMessageDiv.className = 'message bot';
+                    botMessageDiv.textContent = 'Bu özellik şu anda geliştirme aşamasındadır. En kısa sürede size yardımcı olabilmek için çalışıyoruz.';
+                    chatMessages.appendChild(botMessageDiv);
+                    chatMessages.scrollTop = chatMessages.scrollHeight;
+                }, 1000);
+            }
+        }
+
+        // Hızlı yanıt gönderme fonksiyonu
+        function sendQuickReply(message) {
+            const userInput = document.getElementById('userInput');
+            userInput.value = message;
+            sendMessage();
+        }
+    </script>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Union Animation -->
+    <div class="union-animation">
+        <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+            <g fill="#fff">
+                <path d="M50 10 C 20 10, 10 40, 10 50 C 10 60, 20 90, 50 90 C 80 90, 90 60, 90 50 C 90 40, 80 10, 50 10" stroke="#fff" stroke-width="2"/>
+                <circle cx="50" cy="50" r="20" fill="#fff"/>
+                <text x="50" y="55" text-anchor="middle" fill="#6B46C1" font-size="12" font-weight="bold">SENDİKA</text>
+            </g>
+        </svg>
+    </div>
+</body>
+</html> 

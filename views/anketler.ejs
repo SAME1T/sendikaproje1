@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Anketler</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        .survey-container {
+            max-width: 800px;
+            margin: 2rem auto;
+            padding: 2rem;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+        }
+        .question-card {
+            margin-bottom: 1.5rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1.5rem;
+        }
+        .add-question-btn {
+            width: 100%;
+            padding: 1rem;
+            margin-top: 1rem;
+        }
+        .login-btn {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+        }
+        .survey-list {
+            margin-top: 2rem;
+        }
+        .survey-item {
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+    </style>
+</head>
+<body class="bg-light">
+    <a href="/giris" class="btn btn-primary login-btn">
+        <i class="fas fa-sign-in-alt"></i> Giriş Yap
+    </a>
+
+    <div class="container">
+        <div class="survey-container">
+            <h1 class="text-center mb-4">Anketler</h1>
+            
+            <div class="mb-4">
+                <label class="form-label">Anket Başlığı</label>
+                <input type="text" class="form-control" id="surveyTitle" placeholder="Anket başlığını yazın...">
+            </div>
+            
+            <div id="questions-container">
+                <!-- Questions will be added here dynamically -->
+            </div>
+
+            <button class="btn btn-success add-question-btn" onclick="addQuestion()">
+                <i class="fas fa-plus"></i> Yeni Soru Ekle
+            </button>
+
+            <button class="btn btn-primary add-question-btn" onclick="saveSurvey()">
+                <i class="fas fa-save"></i> Anketi Kaydet
+            </button>
+        </div>
+
+        <div class="survey-list">
+            <h2 class="text-center mb-4">Mevcut Anketler</h2>
+            <div id="surveys-list">
+                <% if (surveys && surveys.length > 0) { %>
+                    <% surveys.forEach(survey => { %>
+                        <div class="survey-item">
+                            <h3><%= survey.title %></h3>
+                            <p class="text-muted">Oluşturan: <%= survey.createdBy.name %> <%= survey.createdBy.surname %></p>
+                            <p class="text-muted">Tarih: <%= new Date(survey.createdAt).toLocaleDateString('tr-TR') %></p>
+                            <div class="questions">
+                                <% survey.questions.forEach((question, index) => { %>
+                                    <div class="mb-3">
+                                        <h5><%= index + 1 %>. <%= question.questionText %></h5>
+                                        <ul>
+                                            <% question.options.forEach(option => { %>
+                                                <li><%= option %></li>
+                                            <% }); %>
+                                        </ul>
+                                    </div>
+                                <% }); %>
+                            </div>
+                        </div>
+                    <% }); %>
+                <% } else { %>
+                    <p class="text-center">Henüz anket bulunmamaktadır.</p>
+                <% } %>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function addQuestion() {
+            const questionsContainer = document.getElementById('questions-container');
+            const questionCount = questionsContainer.children.length + 1;
+            
+            const questionCard = document.createElement('div');
+            questionCard.className = 'question-card';
+            questionCard.innerHTML = `
+                <div class="mb-3">
+                    <label class="form-label">Soru ${questionCount}</label>
+                    <input type="text" class="form-control question-input" placeholder="Sorunuzu yazın...">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Seçenekler</label>
+                    <div class="options-container">
+                        <input type="text" class="form-control mb-2 option-input" placeholder="Seçenek 1">
+                        <input type="text" class="form-control mb-2 option-input" placeholder="Seçenek 2">
+                    </div>
+                    <button class="btn btn-sm btn-outline-primary" onclick="addOption(this)">
+                        <i class="fas fa-plus"></i> Seçenek Ekle
+                    </button>
+                </div>
+                <button class="btn btn-danger btn-sm" onclick="removeQuestion(this)">
+                    <i class="fas fa-trash"></i> Soruyu Sil
+                </button>
+            `;
+            
+            questionsContainer.appendChild(questionCard);
+        }
+
+        function addOption(button) {
+            const optionsContainer = button.previousElementSibling;
+            const newOption = document.createElement('input');
+            newOption.type = 'text';
+            newOption.className = 'form-control mb-2 option-input';
+            newOption.placeholder = `Seçenek ${optionsContainer.children.length + 1}`;
+            optionsContainer.appendChild(newOption);
+        }
+
+        function removeQuestion(button) {
+            button.closest('.question-card').remove();
+        }
+
+        async function saveSurvey() {
+            const title = document.getElementById('surveyTitle').value;
+            if (!title) {
+                alert('Lütfen anket başlığı giriniz.');
+                return;
+            }
+
+            const questions = [];
+            const questionCards = document.querySelectorAll('.question-card');
+            
+            questionCards.forEach(card => {
+                const questionText = card.querySelector('.question-input').value;
+                if (!questionText) {
+                    alert('Lütfen tüm soruları doldurunuz.');
+                    return;
+                }
+
+                const options = [];
+                const optionInputs = card.querySelectorAll('.option-input');
+                optionInputs.forEach(input => {
+                    if (input.value) {
+                        options.push(input.value);
+                    }
+                });
+
+                if (options.length < 2) {
+                    alert('Her soru için en az 2 seçenek girmelisiniz.');
+                    return;
+                }
+
+                questions.push({
+                    questionText,
+                    options
+                });
+            });
+
+            if (questions.length === 0) {
+                alert('Lütfen en az bir soru ekleyiniz.');
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/surveys', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ title, questions })
+                });
+
+                if (response.ok) {
+                    alert('Anket başarıyla kaydedildi!');
+                    window.location.reload();
+                } else {
+                    const error = await response.json();
+                    alert('Hata: ' + error.error);
+                }
+            } catch (error) {
+                console.error('Anket kaydetme hatası:', error);
+                alert('Anket kaydedilirken bir hata oluştu.');
+            }
+        }
+    </script>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html> 
