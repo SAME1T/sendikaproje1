@@ -18,7 +18,7 @@ CREATE TABLE users (
 INSERT INTO users (email, password, full_name, user_type) VALUES
 ('sendika@example.com', 'sendika123', 'Sendika Yöneticisi', 'sendika'),
 ('isci1@example.com', 'isci123', 'Ahmet Yılmaz', 'isci'),
-('isci2@example.com', 'isci123', 'Mehmet Demir', 'isci');
+('samet@gmail.com', 'isci124', 'SAMET ÇİFTCİ', 'isci');
 
 -- İletiler tablosu
 CREATE TABLE messages (
