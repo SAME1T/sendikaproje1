@@ -3,165 +3,102 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>İşçi Dashboard</title>
+    <title>İşçi Paneli</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
-        .sidebar {
-            height: 100vh;
-            background-color: #343a40;
-            padding-top: 20px;
-            position: fixed;
-            left: 0;
+        .gradient-custom {
+            background: linear-gradient(to right, #ee7724, #d8363a, #dd3675, #b44593);
         }
-        .sidebar .nav-link {
-            color: #fff;
-            margin-bottom: 5px;
+        .nav-link {
+            color: #333;
+            transition: all 0.3s;
         }
-        .sidebar .nav-link:hover {
-            background-color: #495057;
+        .nav-link:hover {
+            color: #d8363a;
+            transform: translateX(5px);
         }
-        .sidebar .nav-link.active {
-            background-color: #0d6efd;
+        .card {
+            transition: all 0.3s;
         }
-        .main-content {
-            margin-left: 250px;
-            padding: 20px;
-        }
-        .welcome-card {
-            background: linear-gradient(135deg, #0d6efd, #0099ff);
-            color: white;
-            padding: 20px;
-            border-radius: 10px;
-            margin-bottom: 20px;
-        }
-        .stats-card {
-            background: white;
-            border-radius: 10px;
-            padding: 20px;
-            margin-bottom: 20px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
         }
     </style>
 </head>
 <body>
-    <div class="container-fluid">
+    <nav class="navbar navbar-expand-lg navbar-dark gradient-custom">
+        <div class="container">
+            <a class="navbar-brand" href="#">İşçi Paneli</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link active" href="#"><i class="fas fa-home"></i> Ana Sayfa</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#"><i class="fas fa-poll"></i> Anketler</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#"><i class="fas fa-envelope"></i> Mesajlar</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#"><i class="fas fa-bullhorn"></i> Duyurular</a>
+                    </li>
+                </ul>
+                <ul class="navbar-nav">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/cikis"><i class="fas fa-sign-out-alt"></i> Çıkış</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
         <div class="row">
-            <!-- Sidebar -->
-            <nav class="col-md-3 col-lg-2 sidebar">
-                <div class="position-sticky">
-                    <div class="text-center mb-4">
-                        <img src="https://via.placeholder.com/100" class="rounded-circle mb-3" alt="Profil">
-                        <h6 class="text-white"><%= isci.ad %> <%= isci.soyad %></h6>
-                        <small class="text-white-50"><%= isci.sendika.ad %></small>
+            <div class="col-12 mb-4">
+                <div class="card">
+                    <div class="card-body">
+                        <h4 class="card-title">Hoş Geldiniz, <%= user.ad %> <%= user.soyad %></h4>
+                        <p class="card-text">TC No: <%= user.tcno %></p>
+                        <p class="card-text">Email: <%= user.email %></p>
                     </div>
-                    <ul class="nav flex-column">
-                        <li class="nav-item">
-                            <a class="nav-link active" href="/dashboard/isci">
-                                <i class="fas fa-home me-2"></i>Ana Sayfa
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="/anketler">
-                                <i class="fas fa-poll me-2"></i>Anketler
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="/iletiler">
-                                <i class="fas fa-envelope me-2"></i>İletiler
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="/duyurular">
-                                <i class="fas fa-bullhorn me-2"></i>Duyurular
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="/profil">
-                                <i class="fas fa-user-cog me-2"></i>Profil
-                            </a>
-                        </li>
-                        <li class="nav-item mt-5">
-                            <a class="nav-link text-danger" href="/cikis">
-                                <i class="fas fa-sign-out-alt me-2"></i>Çıkış Yap
-                            </a>
-                        </li>
-                    </ul>
                 </div>
-            </nav>
+            </div>
+        </div>
 
-            <!-- Ana İçerik -->
-            <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4 main-content">
-                <div class="welcome-card">
-                    <h1>Hoş Geldiniz, <%= isci.ad %>!</h1>
-                    <p>Sendika İletişim Merkezi üye paneline hoş geldiniz.</p>
-                </div>
-
-                <div class="row">
-                    <div class="col-md-4">
-                        <div class="stats-card">
-                            <h4><i class="fas fa-poll text-primary"></i> Aktif Anketler</h4>
-                            <h2>3</h2>
-                            <p class="text-muted">1 yeni anket var</p>
-                        </div>
-                    </div>
-                    <div class="col-md-4">
-                        <div class="stats-card">
-                            <h4><i class="fas fa-envelope text-success"></i> İletilerim</h4>
-                            <h2>5</h2>
-                            <p class="text-muted">2 yanıt bekleyen ileti</p>
-                        </div>
-                    </div>
-                    <div class="col-md-4">
-                        <div class="stats-card">
-                            <h4><i class="fas fa-bullhorn text-warning"></i> Duyurular</h4>
-                            <h2>8</h2>
-                            <p class="text-muted">3 yeni duyuru</p>
-                        </div>
+        <div class="row">
+            <div class="col-md-4 mb-4">
+                <div class="card text-center">
+                    <div class="card-body">
+                        <i class="fas fa-poll fa-3x mb-3 text-primary"></i>
+                        <h5 class="card-title">Aktif Anketler</h5>
+                        <p class="card-text display-4">3</p>
                     </div>
                 </div>
-
-                <div class="row mt-4">
-                    <div class="col-md-6">
-                        <div class="stats-card">
-                            <h4>Son Aktiviteler</h4>
-                            <ul class="list-unstyled">
-                                <li class="mb-2">
-                                    <i class="fas fa-check-circle text-success"></i>
-                                    "İş Güvenliği" anketini doldurdunuz
-                                </li>
-                                <li class="mb-2">
-                                    <i class="fas fa-envelope text-primary"></i>
-                                    Yeni bir ileti gönderdiniz
-                                </li>
-                                <li class="mb-2">
-                                    <i class="fas fa-bell text-info"></i>
-                                    2 yeni duyuru okundu
-                                </li>
-                            </ul>
-                        </div>
-                    </div>
-                    <div class="col-md-6">
-                        <div class="stats-card">
-                            <h4>Yaklaşan Etkinlikler</h4>
-                            <ul class="list-unstyled">
-                                <li class="mb-2">
-                                    <i class="fas fa-calendar text-primary"></i>
-                                    Üye Toplantısı - 15 Mayıs
-                                </li>
-                                <li class="mb-2">
-                                    <i class="fas fa-graduation-cap text-success"></i>
-                                    İş Güvenliği Eğitimi - 20 Mayıs
-                                </li>
-                                <li class="mb-2">
-                                    <i class="fas fa-users text-warning"></i>
-                                    Sosyal Etkinlik - 25 Mayıs
-                                </li>
-                            </ul>
-                        </div>
+            </div>
+            <div class="col-md-4 mb-4">
+                <div class="card text-center">
+                    <div class="card-body">
+                        <i class="fas fa-envelope fa-3x mb-3 text-success"></i>
+                        <h5 class="card-title">Yeni Mesajlar</h5>
+                        <p class="card-text display-4">5</p>
                     </div>
                 </div>
-            </main>
+            </div>
+            <div class="col-md-4 mb-4">
+                <div class="card text-center">
+                    <div class="card-body">
+                        <i class="fas fa-bullhorn fa-3x mb-3 text-warning"></i>
+                        <h5 class="card-title">Duyurular</h5>
+                        <p class="card-text display-4">2</p>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 

@@ -9,102 +9,127 @@
     <style>
         body {
             min-height: 100vh;
-            background: #0099ff;
+            margin: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(120deg, #6a11cb, #2575fc, #43e97b 99%, #38f9d7 100%);
+            background-size: 200% 200%;
+            animation: gradientMove 8s ease-in-out infinite;
             display: flex;
             align-items: center;
             justify-content: center;
-            margin: 0;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            position: relative;
+            overflow: hidden;
         }
-
-        @keyframes gradient {
-            0% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
+        @keyframes gradientMove {
+            0% {background-position: 0% 50%;}
+            50% {background-position: 100% 50%;}
+            100% {background-position: 0% 50%;}
         }
-
+        .bg-shape {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(60px);
+            opacity: 0.35;
+            z-index: 0;
+        }
+        .bg-shape1 {
+            width: 420px; height: 420px;
+            background: #6a11cb;
+            top: -120px; left: -120px;
+        }
+        .bg-shape2 {
+            width: 320px; height: 320px;
+            background: #43e97b;
+            bottom: -100px; right: -100px;
+        }
+        .bg-shape3 {
+            width: 180px; height: 180px;
+            background: #2575fc;
+            top: 60%; left: 60%;
+        }
         .login-container {
-            background: rgba(255, 255, 255, 0.95);
-            padding: 2rem;
-            border-radius: 20px;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-            backdrop-filter: blur(10px);
+            background: rgba(255,255,255,0.88);
+            box-shadow: 0 12px 40px 0 rgba(31,38,135,0.18);
+            border-radius: 32px;
+            padding: 3.5rem 2.5rem 2.5rem 2.5rem;
+            max-width: 520px;
             width: 100%;
-            max-width: 450px;
-            transform: translateY(20px);
-            opacity: 0;
-            animation: fadeInUp 0.5s ease forwards;
+            position: relative;
+            z-index: 1;
+            animation: fadeInUp 0.7s cubic-bezier(.39,.575,.56,1.000) both;
         }
-
         @keyframes fadeInUp {
-            to {
-                transform: translateY(0);
-                opacity: 1;
-            }
+            0% {opacity: 0; transform: translateY(40px);}
+            100% {opacity: 1; transform: translateY(0);}
         }
-
         .login-header {
-            text-align: center;
+            text-align: left;
             margin-bottom: 2rem;
         }
-
         .login-header i {
-            font-size: 3rem;
-            margin-bottom: 1rem;
-            color: #0d6efd;
+            font-size: 2.7rem;
+            color: #6a11cb;
+            margin-bottom: 0.5rem;
             animation: bounce 2s infinite;
         }
-
         @keyframes bounce {
             0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
-            40% { transform: translateY(-20px); }
-            60% { transform: translateY(-10px); }
+            40% { transform: translateY(-18px); }
+            60% { transform: translateY(-8px); }
         }
-
+        .login-header h2 {
+            font-weight: 700;
+            color: #2575fc;
+            margin-bottom: 0.2rem;
+        }
+        .login-header p {
+            color: #555;
+            font-size: 1.1rem;
+        }
         .form-floating {
-            margin-bottom: 1rem;
+            margin-bottom: 1.2rem;
         }
-
         .form-control {
-            border-radius: 10px;
+            border-radius: 12px;
             border: 2px solid #e0e0e0;
-            transition: all 0.3s ease;
+            transition: border-color 0.3s, box-shadow 0.3s;
+            font-size: 1.05rem;
         }
-
         .form-control:focus {
-            border-color: #0d6efd;
-            box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.1);
+            border-color: #2575fc;
+            box-shadow: 0 0 0 0.2rem rgba(37,117,252,0.08);
         }
-
         .btn-primary {
-            border-radius: 10px;
+            border-radius: 12px;
             padding: 0.8rem;
             font-weight: 600;
             text-transform: uppercase;
             letter-spacing: 1px;
-            transition: all 0.3s ease;
-            background: linear-gradient(45deg, #0d6efd, #0099ff);
+            background: linear-gradient(90deg, #2575fc 0%, #6a11cb 100%);
             border: none;
+            transition: box-shadow 0.3s, transform 0.2s;
+            box-shadow: 0 2px 8px rgba(37,117,252,0.10);
         }
-
         .btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(13, 110, 253, 0.3);
+            transform: translateY(-2px) scale(1.03);
+            box-shadow: 0 6px 18px rgba(37,117,252,0.18);
+            background: linear-gradient(90deg, #6a11cb 0%, #2575fc 100%);
         }
-
         .login-footer {
             text-align: center;
             margin-top: 2rem;
         }
-
         .login-footer a {
-            color: #0d6efd;
+            color: #2575fc;
             text-decoration: none;
             margin: 0 0.5rem;
-            transition: all 0.3s ease;
+            font-weight: 500;
             position: relative;
+            transition: color 0.2s;
         }
-
+        .login-footer a:hover {
+            color: #6a11cb;
+        }
         .login-footer a::after {
             content: '';
             position: absolute;
@@ -112,113 +137,98 @@
             height: 2px;
             bottom: -2px;
             left: 0;
-            background-color: #0d6efd;
-            transition: width 0.3s ease;
+            background-color: #2575fc;
+            transition: width 0.3s;
         }
-
         .login-footer a:hover::after {
             width: 100%;
         }
-
-        .welcome-text {
-            text-align: left;
-            color: white;
-            margin-bottom: 2rem;
-            animation: fadeIn 1s ease;
-            position: absolute;
-            top: 2rem;
-            left: 2rem;
-        }
-
-        .welcome-text h1 {
-            font-size: 2.5rem;
-            font-weight: bold;
-            margin-bottom: 0.5rem;
-        }
-
-        .welcome-text p {
-            font-size: 1.2rem;
-            opacity: 0.9;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
-        }
-
         #error-message {
             display: none;
             padding: 1rem;
-            border-radius: 10px;
-            background-color: rgba(220, 53, 69, 0.1);
-            border: 1px solid rgba(220, 53, 69, 0.2);
+            border-radius: 12px;
+            background: linear-gradient(90deg, #ff758c 0%, #ff7eb3 100%);
+            color: #fff;
+            font-weight: 500;
             margin-bottom: 1rem;
             text-align: center;
-            animation: shake 0.5s ease;
+            box-shadow: 0 2px 8px rgba(255,117,140,0.10);
+            animation: shake 0.5s;
         }
-
         @keyframes shake {
             0%, 100% { transform: translateX(0); }
-            25% { transform: translateX(-10px); }
-            75% { transform: translateX(10px); }
+            25% { transform: translateX(-8px); }
+            75% { transform: translateX(8px); }
+        }
+        .password-toggle {
+            padding: 0.5rem 0.75rem;
+            color: #6c757d;
+            z-index: 5;
+            margin-right: 0.5rem;
+        }
+        .password-toggle:hover {
+            color: #0099ff;
+        }
+        .password-toggle:focus {
+            box-shadow: none;
         }
     </style>
 </head>
 <body>
-    <div class="welcome-text">
-        <h1>Sendika İletişim Merkezi</h1>
-        <p>Güçlü sendika, güçlü gelecek</p>
+    <div class="bg-shape bg-shape1"></div>
+    <div class="bg-shape bg-shape2"></div>
+    <div class="bg-shape bg-shape3"></div>
+    <div class="main-title" style="position:absolute;top:36px;left:48px;z-index:2;">
+        <h1 style="font-size:2.5rem;font-weight:800;color:white;text-shadow:0 2px 16px rgba(60,60,120,0.18);margin-bottom:0.2rem;">Sendika İletişim Merkezi</h1>
+        <div style="font-size:1.2rem;color:#f3f3f3;text-shadow:0 1px 8px rgba(60,60,120,0.10);">Haklarınız için güçlü bir ses</div>
     </div>
-
     <div class="login-container">
         <div class="login-header">
             <i class="fas fa-user-tie"></i>
             <h2>Sendikacı Girişi</h2>
-            <p class="text-muted">Hesabınıza giriş yapın</p>
+            <p>Sendika çalışanı olarak giriş yapın</p>
         </div>
-
-        <div id="error-message" class="alert alert-danger" role="alert"></div>
-
+        <div id="error-message" class="alert" role="alert"></div>
         <form id="login-form" onsubmit="handleLogin(event)">
             <div class="form-floating mb-3">
                 <input type="text" class="form-control" id="tcno" name="tcno" placeholder="TC Kimlik Numarası" required>
                 <label for="tcno">TC Kimlik Numarası</label>
             </div>
-
             <div class="form-floating mb-4">
-                <input type="password" class="form-control" id="sifre" name="sifre" placeholder="Şifre" required>
-                <label for="sifre">Şifre</label>
+                <div class="position-relative">
+                    <input type="password" class="form-control" id="sifre" name="sifre" placeholder="Şifre" required>
+                    <label for="sifre">Şifre</label>
+                    <button type="button" class="btn position-absolute top-50 end-0 translate-middle-y border-0 bg-transparent password-toggle">
+                        <i class="fas fa-eye"></i>
+                    </button>
+                </div>
             </div>
-
             <button type="submit" class="btn btn-primary w-100">
                 <i class="fas fa-sign-in-alt me-2"></i> Giriş Yap
             </button>
         </form>
-
         <div class="login-footer">
-            <a href="/sifremi-unuttum">Şifremi Unuttum</a>
+            <a href="/giris/isci">İşçi Girişi</a>
             <span class="text-muted">|</span>
             <a href="/uye-ol">Üye Ol</a>
+            <span class="text-muted">|</span>
+            <a href="/sifremi-unuttum?type=sendikaci">Şifremi Unuttum</a>
             <span class="text-muted">|</span>
             <a href="/">Ana Sayfa</a>
         </div>
     </div>
-
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/js/all.min.js"></script>
     <script>
         async function handleLogin(event) {
             event.preventDefault();
-            
             const tcno = document.getElementById('tcno').value;
             const sifre = document.getElementById('sifre').value;
             const errorMessage = document.getElementById('error-message');
             const submitButton = event.target.querySelector('button[type="submit"]');
-            
             try {
                 submitButton.disabled = true;
                 submitButton.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i> Giriş Yapılıyor...';
-
                 const response = await fetch('/giris/sendikaci', {
                     method: 'POST',
                     headers: {
@@ -226,9 +236,7 @@
                     },
                     body: JSON.stringify({ tcno, sifre })
                 });
-
                 const data = await response.json();
-
                 if (response.ok) {
                     errorMessage.style.display = 'none';
                     window.location.href = data.redirect;
@@ -239,13 +247,65 @@
                     submitButton.innerHTML = '<i class="fas fa-sign-in-alt me-2"></i> Giriş Yap';
                 }
             } catch (error) {
-                console.error('Giriş hatası:', error);
                 errorMessage.textContent = 'Giriş yapılırken bir hata oluştu';
                 errorMessage.style.display = 'block';
                 submitButton.disabled = false;
                 submitButton.innerHTML = '<i class="fas fa-sign-in-alt me-2"></i> Giriş Yap';
             }
         }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const form = document.querySelector('form');
+            const errorMessage = document.getElementById('error-message');
+            const passwordToggle = document.querySelector('.password-toggle');
+            const passwordInput = document.getElementById('sifre');
+
+            // Şifre göster/gizle
+            passwordToggle.addEventListener('click', () => {
+                const icon = passwordToggle.querySelector('i');
+                
+                if (passwordInput.type === 'password') {
+                    passwordInput.type = 'text';
+                    icon.classList.remove('fa-eye');
+                    icon.classList.add('fa-eye-slash');
+                } else {
+                    passwordInput.type = 'password';
+                    icon.classList.remove('fa-eye-slash');
+                    icon.classList.add('fa-eye');
+                }
+            });
+
+            // Form gönderimi
+            form.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                
+                const formData = new FormData(form);
+                const data = Object.fromEntries(formData.entries());
+
+                try {
+                    const response = await fetch('/giris/sendikaci', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(data)
+                    });
+
+                    const result = await response.json();
+
+                    if (response.ok) {
+                        window.location.href = result.redirect;
+                    } else {
+                        errorMessage.textContent = result.error;
+                        errorMessage.classList.remove('d-none');
+                    }
+                } catch (error) {
+                    console.error('Hata:', error);
+                    errorMessage.textContent = 'Giriş yapılırken bir hata oluştu';
+                    errorMessage.classList.remove('d-none');
+                }
+            });
+        });
     </script>
 </body>
 </html> 
