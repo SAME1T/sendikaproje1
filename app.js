@@ -74,7 +74,7 @@ app.get('/', (req, res) => {
     res.render('index');
 });
 
-// Giriş sayfaları rotaları
+// Giriş sayfaları
 app.get('/giris/sendikaci', (req, res) => {
     res.render('sendikaci-giris');
 });
@@ -83,25 +83,25 @@ app.get('/giris/isci', (req, res) => {
     res.render('isci-giris');
 });
 
+// Giriş işlemleri
 app.post('/giris/sendikaci', async (req, res) => {
     try {
         const { tcno, sifre } = req.body;
         const sendikaci = await Sendikaci.findOne({ tcno });
-        
-        if (!sendikaci) {
-            return res.status(401).json({ error: 'Kullanıcı bulunamadı' });
+
+        if (!sendikaci || !(await bcrypt.compare(sifre, sendikaci.sifre))) {
+            return res.status(401).json({ error: 'Geçersiz TC kimlik numarası veya şifre' });
         }
 
-        const isMatch = await bcrypt.compare(sifre, sendikaci.sifre);
-        if (!isMatch) {
-            return res.status(401).json({ error: 'Hatalı şifre' });
-        }
+        req.session.user = {
+            id: sendikaci._id,
+            tcno: sendikaci.tcno,
+            ad: sendikaci.ad,
+            soyad: sendikaci.soyad,
+            type: 'sendikaci'
+        };
 
-        req.session.userId = sendikaci._id;
-        req.session.userType = 'sendikaci';
-        req.session.sendikaKod = sendikaci.sendika.kod;
-        
-        res.json({ success: true, redirect: '/dashboard/sendikaci' });
+        res.json({ redirect: '/dashboard/sendikaci' });
     } catch (error) {
         console.error('Giriş hatası:', error);
         res.status(500).json({ error: 'Giriş yapılırken bir hata oluştu' });
@@ -112,21 +112,20 @@ app.post('/giris/isci', async (req, res) => {
     try {
         const { tcno, sifre } = req.body;
         const isci = await Isci.findOne({ tcno });
-        
-        if (!isci) {
-            return res.status(401).json({ error: 'Kullanıcı bulunamadı' });
+
+        if (!isci || !(await bcrypt.compare(sifre, isci.sifre))) {
+            return res.status(401).json({ error: 'Geçersiz TC kimlik numarası veya şifre' });
         }
 
-        const isMatch = await bcrypt.compare(sifre, isci.sifre);
-        if (!isMatch) {
-            return res.status(401).json({ error: 'Hatalı şifre' });
-        }
+        req.session.user = {
+            id: isci._id,
+            tcno: isci.tcno,
+            ad: isci.ad,
+            soyad: isci.soyad,
+            type: 'isci'
+        };
 
-        req.session.userId = isci._id;
-        req.session.userType = 'isci';
-        req.session.sendikaKod = isci.sendika.kod;
-        
-        res.json({ success: true, redirect: '/dashboard/isci' });
+        res.json({ redirect: '/dashboard/isci' });
     } catch (error) {
         console.error('Giriş hatası:', error);
         res.status(500).json({ error: 'Giriş yapılırken bir hata oluştu' });
