@@ -368,9 +368,17 @@ app.get('/dashboard/sendikaci', async (req, res) => {
             return res.redirect('/giris/sendikaci');
         }
 
+        // Sendikacı (rol=2) toplam üye sayısını çek
+        const result = await db.sequelize.query(
+            'SELECT COUNT(*) as count FROM users WHERE rol = 2',
+            { type: db.Sequelize.QueryTypes.SELECT }
+        );
+        const uyeSayisi = result[0].count;
+
         // Dashboard sayfasını render et
         res.render('sendikaci-dashboard', { 
             user: user,
+            uyeSayisi: uyeSayisi,
             activeTab: 'dashboard',
             stats: {
                 messageCount: 0,
@@ -397,9 +405,17 @@ app.get('/dashboard/isci', async (req, res) => {
             return res.redirect('/giris/isci');
         }
 
+        // İşçi (rol=1) toplam üye sayısını çek
+        const result = await db.sequelize.query(
+            'SELECT COUNT(*) as count FROM users WHERE rol = 1',
+            { type: db.Sequelize.QueryTypes.SELECT }
+        );
+        const uyeSayisi = result[0].count;
+
         // Dashboard sayfasını render et
         res.render('isci-dashboard', { 
             user: user,
+            uyeSayisi: uyeSayisi,
             activeTab: 'dashboard',
             stats: {
                 messageCount: 0,
