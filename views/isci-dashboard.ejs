@@ -313,6 +313,11 @@
                     <i class="fas fa-calendar-alt"></i> Etkinlikler
                 </a>
             </li>
+            <li class="nav-item">
+                <a class="nav-link" href="/bordrolarim">
+                    <i class="fas fa-file-invoice-dollar"></i> Bordrolarım
+                </a>
+            </li>
             <li class="nav-item mt-auto">
                 <a class="nav-link" href="/cikis">
                     <i class="fas fa-sign-out-alt"></i> Çıkış
@@ -328,7 +333,7 @@
                 <div class="card welcome-card">
                     <div class="card-body">
                         <h4 class="card-title">Hoş Geldiniz, <%= user.ad %> <%= user.soyad %></h4>
-                        <p class="card-text">TC No: <%= user.tcno %></p>
+                        <p class="card-text">TC No: <%= user.tc %></p>
                         <p class="card-text">Email: <%= user.email %></p>
                     </div>
                 </div>

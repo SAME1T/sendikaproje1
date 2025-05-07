@@ -7,6 +7,7 @@ const cors = require('cors');
 const rateLimit = require('express-rate-limit');
 const apiConfig = require('./config/api.config');
 require('dotenv').config();
+const { Pool } = require('pg');
 
 // Model importları
 // const User = require('./models/user'); // Eğer kullanılmıyorsa kaldırılabilir
@@ -21,6 +22,15 @@ const Sendikaci = db.Sendikaci;
 const Isci = db.Isci;
 
 const app = express();
+
+// PostgreSQL bağlantı ayarları
+const pool = new Pool({
+    user: 'postgres',
+    host: 'localhost',
+    database: 'sendikaprojesi',
+    password: 'Samet6380.',
+    port: 5432,
+});
 
 // CORS ayarları
 app.use(cors({
@@ -75,89 +85,53 @@ app.get('/giris/isci', (req, res) => {
     res.render('isci-giris');
 });
 
-app.post('/giris/sendikaci', async (req, res) => {
+// İşçi giriş işlemi
+app.post('/isci-giris', async (req, res) => {
+    const { tc, sifre } = req.body;
     try {
-        const { tcno, sifre } = req.body;
-        console.log('Sendikacı girişi denemesi:', { tcno, sifre });
-
-        const users = await db.sequelize.query(
-            'SELECT * FROM users WHERE tc_no = ? AND rol = 2',
-            {
-                replacements: [tcno],
-                type: db.Sequelize.QueryTypes.SELECT
-            }
+        const result = await pool.query(
+            'SELECT * FROM users WHERE tc = $1 AND sifre = $2 AND rol = 1',
+            [tc, sifre]
         );
-
-        const user = users[0];
-        console.log('Bulunan kullanıcı:', user);
-
-        if (!user) {
-            return res.status(401).json({ error: 'Kullanıcı bulunamadı veya yetkiniz yok!' });
-        }
-
-        // Şifre kontrolü
-        if (sifre === user.password) { // Şimdilik düz metin karşılaştırması yapıyoruz
+        
+        if (result.rows.length > 0) {
             // Session'a kullanıcı bilgilerini kaydet
-            req.session.userId = user.id;
-            req.session.userType = 'sendikaci';
-            req.session.user = {
-                id: user.id,
-                tcno: user.tc_no,
-                ad: user.ad,
-                soyad: user.soyad,
-                email: user.email
-            };
+            req.session.userId = result.rows[0].id;
+            req.session.userType = 'isci';
+            req.session.user = result.rows[0];
             
-            return res.json({ success: true, redirect: '/dashboard/sendikaci' });
+            res.redirect('/dashboard/isci');
         } else {
-            return res.status(401).json({ error: 'Hatalı şifre!' });
+            res.render('isci-giris', { error: 'TC veya şifre hatalı!' });
         }
-    } catch (error) {
-        console.error('Giriş hatası:', error);
-        res.status(500).json({ error: 'Giriş yapılırken bir hata oluştu' });
+    } catch (err) {
+        console.error(err);
+        res.render('isci-giris', { error: 'Bir hata oluştu!' });
     }
 });
 
-app.post('/giris/isci', async (req, res) => {
+// Sendikacı giriş işlemi
+app.post('/sendikaci-giris', async (req, res) => {
+    const { tc, sifre } = req.body;
     try {
-        const { tcno, sifre } = req.body;
-        console.log('İşçi girişi denemesi:', { tcno, sifre });
-
-        const users = await db.sequelize.query(
-            'SELECT * FROM users WHERE tc_no = ? AND rol = 1',
-            {
-                replacements: [tcno],
-                type: db.Sequelize.QueryTypes.SELECT
-            }
+        const result = await pool.query(
+            'SELECT * FROM users WHERE tc = $1 AND sifre = $2 AND rol = 2',
+            [tc, sifre]
         );
-
-        const user = users[0];
-        console.log('Bulunan kullanıcı:', user);
-
-        if (!user) {
-            return res.status(401).json({ error: 'Kullanıcı bulunamadı veya yetkiniz yok!' });
-        }
-
-        // Şifre kontrolü
-        if (sifre === user.password) { // Şimdilik düz metin karşılaştırması yapıyoruz
+        
+        if (result.rows.length > 0) {
             // Session'a kullanıcı bilgilerini kaydet
-            req.session.userId = user.id;
-            req.session.userType = 'isci';
-            req.session.user = {
-                id: user.id,
-                tcno: user.tc_no,
-                ad: user.ad,
-                soyad: user.soyad,
-                email: user.email
-            };
+            req.session.userId = result.rows[0].id;
+            req.session.userType = 'sendikaci';
+            req.session.user = result.rows[0];
             
-            return res.json({ success: true, redirect: '/dashboard/isci' });
+            res.redirect('/dashboard/sendikaci');
         } else {
-            return res.status(401).json({ error: 'Hatalı şifre!' });
+            res.render('sendikaci-giris', { error: 'TC veya şifre hatalı!' });
         }
-    } catch (error) {
-        console.error('Giriş hatası:', error);
-        res.status(500).json({ error: 'Giriş yapılırken bir hata oluştu' });
+    } catch (err) {
+        console.error(err);
+        res.render('sendikaci-giris', { error: 'Bir hata oluştu!' });
     }
 });
 
@@ -355,36 +329,24 @@ app.get('/api/surveys', async (req, res) => {
     }
 });
 
-// Dashboard sayfası rotası
-app.get('/dashboard/sendikaci', async (req, res) => {
+// İşçi dashboard sayfası
+app.get('/dashboard/isci', async (req, res) => {
     try {
-        if (!req.session.userId || req.session.userType !== 'sendikaci') {
-            return res.redirect('/giris/sendikaci');
+        if (!req.session.userId || req.session.userType !== 'isci') {
+            return res.redirect('/giris/isci');
         }
 
-        // Session'dan kullanıcı bilgilerini al
-        const user = req.session.user;
-        if (!user) {
-            return res.redirect('/giris/sendikaci');
-        }
-
-        // Sendikacı (rol=2) toplam üye sayısını çek
-        const result = await db.sequelize.query(
-            'SELECT COUNT(*) as count FROM users WHERE rol = 2',
-            { type: db.Sequelize.QueryTypes.SELECT }
+        // İşçi (rol=1) toplam üye sayısını çek
+        const result = await pool.query(
+            'SELECT COUNT(*) as count FROM users WHERE rol = 1'
         );
-        const uyeSayisi = result[0].count;
+        const uyeSayisi = result.rows[0].count;
 
         // Dashboard sayfasını render et
-        res.render('sendikaci-dashboard', { 
-            user: user,
+        res.render('isci-dashboard', { 
+            user: req.session.user,
             uyeSayisi: uyeSayisi,
-            activeTab: 'dashboard',
-            stats: {
-                messageCount: 0,
-                surveyCount: 0,
-                announcementCount: 0
-            }
+            activeTab: 'dashboard'
         });
     } catch (error) {
         console.error('Dashboard hatası:', error);
@@ -392,36 +354,24 @@ app.get('/dashboard/sendikaci', async (req, res) => {
     }
 });
 
-// İşçi dashboard sayfası rotası
-app.get('/dashboard/isci', async (req, res) => {
+// Sendikacı dashboard sayfası
+app.get('/dashboard/sendikaci', async (req, res) => {
     try {
-        if (!req.session.userId || req.session.userType !== 'isci') {
-            return res.redirect('/giris/isci');
+        if (!req.session.userId || req.session.userType !== 'sendikaci') {
+            return res.redirect('/giris/sendikaci');
         }
 
-        // Session'dan kullanıcı bilgilerini al
-        const user = req.session.user;
-        if (!user) {
-            return res.redirect('/giris/isci');
-        }
-
-        // İşçi (rol=1) toplam üye sayısını çek
-        const result = await db.sequelize.query(
-            'SELECT COUNT(*) as count FROM users WHERE rol = 1',
-            { type: db.Sequelize.QueryTypes.SELECT }
+        // Sendikacı (rol=2) toplam üye sayısını çek
+        const result = await pool.query(
+            'SELECT COUNT(*) as count FROM users WHERE rol = 2'
         );
-        const uyeSayisi = result[0].count;
+        const uyeSayisi = result.rows[0].count;
 
         // Dashboard sayfasını render et
-        res.render('isci-dashboard', { 
-            user: user,
+        res.render('sendikaci-dashboard', { 
+            user: req.session.user,
             uyeSayisi: uyeSayisi,
-            activeTab: 'dashboard',
-            stats: {
-                messageCount: 0,
-                surveyCount: 0,
-                announcementCount: 0
-            }
+            activeTab: 'dashboard'
         });
     } catch (error) {
         console.error('Dashboard hatası:', error);
@@ -438,46 +388,18 @@ app.get('/uye-ol', (req, res) => {
 app.post('/uye-ol', async (req, res) => {
     try {
         const { tcno, ad, soyad, telefon, email, sifre, userType } = req.body;
-        console.log('Üye olma denemesi:', { tcno, ad, soyad, telefon, email, userType });
-
-        // TC kimlik numarası kontrolü
-        const existingUsers = await db.sequelize.query(
-            'SELECT * FROM users WHERE tc_no = ?',
-            {
-                replacements: [tcno],
-                type: db.Sequelize.QueryTypes.SELECT
-            }
-        );
-        
-        if (existingUsers.length > 0) {
-            return res.status(400).json({ error: 'Bu TC kimlik numarası zaten kayıtlı!' });
+        // TC ve e-posta kontrolü
+        const existingUser = await pool.query('SELECT * FROM users WHERE tc = $1 OR email = $2', [tcno, email]);
+        if (existingUser.rows.length > 0) {
+            return res.status(400).json({ error: 'Bu TC kimlik numarası veya e-posta zaten kayıtlı!' });
         }
-
-        // E-posta kontrolü
-        const existingEmails = await db.sequelize.query(
-            'SELECT * FROM users WHERE email = ?',
-            {
-                replacements: [email],
-                type: db.Sequelize.QueryTypes.SELECT
-            }
-        );
-        
-        if (existingEmails.length > 0) {
-            return res.status(400).json({ error: 'Bu e-posta adresi zaten kayıtlı!' });
-        }
-
         // Rol değerini belirle (1: işçi, 2: sendikacı)
         const rol = userType === 'isci' ? 1 : 2;
-
-        // Yeni kullanıcı oluştur
-        const result = await db.sequelize.query(
-            'INSERT INTO users (tc_no, ad, soyad, telefon, email, password, rol, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, NOW())',
-            {
-                replacements: [tcno, ad, soyad, telefon, email, sifre, rol],
-                type: db.Sequelize.QueryTypes.INSERT
-            }
+        // Yeni kullanıcıyı ekle
+        await pool.query(
+            'INSERT INTO users (tc, ad, soyad, telefon, email, sifre, rol) VALUES ($1, $2, $3, $4, $5, $6, $7)',
+            [tcno, ad, soyad, telefon, email, sifre, rol]
         );
-
         // Başarılı kayıt sonrası ilgili giriş sayfasına yönlendir
         const redirectUrl = rol === 1 ? '/giris/isci' : '/giris/sendikaci';
         res.json({ 
@@ -507,6 +429,22 @@ app.post('/sifremi-unuttum', async (req, res) => {
     }
     // Burada gerçek uygulamada şifre sıfırlama tokenı ve e-posta gönderimi yapılır
     return res.json({ message: 'Şifre yenileme bağlantısı e-posta adresinize gönderildi.' });
+});
+
+// Bordrolarım (işçi)
+app.get('/bordrolarim', (req, res) => {
+    if (!req.session.userId || req.session.userType !== 'isci') {
+        return res.redirect('/giris/isci');
+    }
+    res.render('bordrolarim', { user: req.session.user });
+});
+
+// Bordro Yönetim (sendikacı)
+app.get('/bordro-yonetim', (req, res) => {
+    if (!req.session.userId || req.session.userType !== 'sendikaci') {
+        return res.redirect('/giris/sendikaci');
+    }
+    res.render('bordro-yonetim', { user: req.session.user });
 });
 
 // API routes
