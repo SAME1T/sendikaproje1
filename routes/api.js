@@ -7,6 +7,7 @@ const config = require('../config/api.config');
 const db = require('../models/sequelize');
 const { Op } = require('sequelize');
 const payrollRouter = require('./payroll');
+const SurveyAnswer = db.SurveyAnswer;
 
 // Login endpoint
 router.post('/login', async (req, res) => {
@@ -134,5 +135,104 @@ router.get('/user/:id', verifyToken, async (req, res) => {
 });
 
 router.use('/payrolls', payrollRouter);
+
+// Anket oluşturma (sendikacı)
+router.post('/surveys', async (req, res) => {
+  try {
+    if (!req.session.userId || req.session.userType !== 'sendikaci') {
+      return res.status(403).json({ error: 'Yetkisiz erişim' });
+    }
+    const { title, description, questions } = req.body;
+    // Önce anketi kaydet
+    const survey = await db.Survey.create({ title, description, created_at: new Date(), created_by: req.session.userId, status: 'aktif' });
+    // Soruları kaydet
+    for (const q of questions) {
+      await db.SurveyQuestion.create({
+        survey_id: survey.id,
+        question_text: q.questionText,
+        type: q.type,
+        options: q.type === 'multiple' ? q.options : null
+      });
+    }
+    res.status(201).json({ success: true, surveyId: survey.id });
+  } catch (error) {
+    console.error('Anket oluşturma hatası:', error);
+    res.status(500).json({ error: 'Anket oluşturulurken bir hata oluştu' });
+  }
+});
+
+// Anket cevap kaydetme (işçi)
+router.post('/survey-answers', async (req, res) => {
+  try {
+    if (!req.session.userId || req.session.userType !== 'isci') {
+      return res.status(403).json({ error: 'Yetkisiz erişim' });
+    }
+    const { survey_id, answers } = req.body; // answers: [{question_id, answer}]
+    // Aynı işçi aynı ankete birden fazla cevap veremesin
+    const existing = await db.SurveyAnswer.findOne({ where: { survey_id, user_id: req.session.userId } });
+    if (existing) {
+      return res.status(400).json({ error: 'Bu anketi zaten cevapladınız.' });
+    }
+    for (const ans of answers) {
+      await db.SurveyAnswer.create({
+        survey_id,
+        user_id: req.session.userId,
+        question_id: ans.question_id,
+        answer: ans.answer,
+        created_at: new Date()
+      });
+    }
+    res.status(201).json({ success: true });
+  } catch (error) {
+    console.error('Cevap kaydetme hatası:', error);
+    res.status(500).json({ error: 'Cevap kaydedilemedi' });
+  }
+});
+
+// Anket sonuçlarını getir (sendikacı)
+router.get('/survey-results/:surveyId', async (req, res) => {
+  try {
+    if (!req.session.userId || req.session.userType !== 'sendikaci') {
+      return res.status(403).json({ error: 'Yetkisiz erişim' });
+    }
+    const surveyId = req.params.surveyId;
+    const answers = await SurveyAnswer.findAll({ where: { survey_id: surveyId } });
+    res.json(answers);
+  } catch (error) {
+    res.status(500).json({ error: 'Sonuçlar alınamadı' });
+  }
+});
+
+// Anket silme (sendikacı)
+router.delete('/surveys/:id', async (req, res) => {
+  try {
+    if (!req.session.userId || req.session.userType !== 'sendikaci') {
+      return res.status(403).json({ error: 'Yetkisiz erişim' });
+    }
+    const surveyId = req.params.id;
+    // Sadece kendi oluşturduğu anketi silebilsin
+    const survey = await db.Survey.findOne({ where: { id: surveyId, created_by: req.session.userId } });
+    if (!survey) {
+      return res.status(404).json({ error: 'Anket bulunamadı veya silme yetkiniz yok.' });
+    }
+    // İlişkili soruları ve cevapları sil
+    await db.SurveyQuestion.destroy({ where: { survey_id: surveyId } });
+    await db.SurveyAnswer.destroy({ where: { survey_id: surveyId } });
+    await db.Survey.destroy({ where: { id: surveyId } });
+    res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({ error: 'Anket silinemedi' });
+  }
+});
+
+// Aktif anket sayısını getir
+router.get('/active-survey-count', async (req, res) => {
+  try {
+    const count = await db.Survey.count({ where: { status: 'aktif' } });
+    res.json({ count });
+  } catch (error) {
+    res.status(500).json({ error: 'Aktif anket sayısı alınamadı' });
+  }
+});
 
 module.exports = router; 

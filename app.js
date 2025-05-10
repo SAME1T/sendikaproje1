@@ -150,10 +150,31 @@ app.get('/iletiler', async (req, res, next) => {
 // Anketler sayfası route'u
 app.get('/anketler', async (req, res) => {
     try {
-        const surveys = await Survey.find()
-            .populate('createdBy', 'name surname')
-            .sort({ createdAt: -1 });
-        res.render('anketler', { surveys });
+        if (!req.session.userId || !req.session.userType) {
+            return res.redirect('/giris/' + (req.session.userType === 'isci' ? 'isci' : 'sendikaci'));
+        }
+        const user = req.session.user;
+        const userType = req.session.userType;
+        let surveys = [];
+        let answers = [];
+        if (userType === 'isci') {
+            // Sadece aktif anketleri çek
+            surveys = await db.Survey.findAll({
+                where: { status: 'aktif' },
+                order: [['created_at', 'DESC']],
+                include: [{ model: db.SurveyQuestion, as: 'questions' }]
+            });
+            // İşçi için: kendi cevapladığı anket cevaplarını çek
+            answers = await db.SurveyAnswer.findAll({ where: { user_id: req.session.userId } });
+        } else if (userType === 'sendikaci') {
+            // Sendikacı için: tüm anketler ve cevaplar
+            surveys = await db.Survey.findAll({
+                order: [['created_at', 'DESC']],
+                include: [{ model: db.SurveyQuestion, as: 'questions' }]
+            });
+            answers = await db.SurveyAnswer.findAll();
+        }
+        res.render('anketler', { user, userType, surveys, answers });
     } catch (error) {
         console.error('Anketleri getirme hatası:', error);
         res.status(500).render('error', { error: 'Anketler yüklenirken bir hata oluştu' });
@@ -277,35 +298,6 @@ app.patch('/api/messages/:messageId/status', async (req, res) => {
     } catch (error) {
         console.error('Durum güncelleme hatası:', error);
         res.status(500).json({ error: 'Durum güncellenirken bir hata oluştu' });
-    }
-});
-
-// Anket oluşturma API endpoint'i
-app.post('/api/surveys', async (req, res) => {
-    try {
-        const { title, questions } = req.body;
-        
-        // Kullanıcı bilgilerini al
-        const user = await User.findById(req.session.userId);
-        if (!user) {
-            return res.status(401).json({ error: 'Kullanıcı bulunamadı' });
-        }
-
-        const survey = new Survey({
-            title,
-            questions,
-            createdBy: user._id,
-            sendika: user.sendika
-        });
-        
-        const savedSurvey = await survey.save();
-        const populatedSurvey = await Survey.findById(savedSurvey._id)
-            .populate('createdBy', 'name surname');
-            
-        res.status(201).json(populatedSurvey);
-    } catch (error) {
-        console.error('Anket oluşturma hatası:', error);
-        res.status(500).json({ error: 'Anket oluşturulurken bir hata oluştu' });
     }
 });
 
@@ -474,6 +466,26 @@ app.get('/bordro-yonetim', async (req, res) => {
     // Bekleyen bordro sayısı (örnek: description veya pdf_path eksik olanlar bekliyor kabul edilsin)
     const bekleyenBordro = payrolls.filter(p => !p.pdf_path).length;
     res.render('bordro-yonetim', { user: req.session.user, isciler: isciler.rows, payrolls, toplamBordro, sonGonderim, bekleyenBordro });
+});
+
+// Anket Yönetimi (sendikacı)
+app.get('/anket-yonetim', async (req, res) => {
+    try {
+        if (!req.session.userId || req.session.userType !== 'sendikaci') {
+            return res.redirect('/giris/sendikaci');
+        }
+        // Sadece bu sendikacının oluşturduğu anketleri çekmek isterseniz:
+        // const surveys = await db.Survey.findAll({ where: { created_by: req.session.userId }, ... });
+        // Şimdilik tüm anketleri çekiyoruz:
+        const surveys = await db.Survey.findAll({
+            order: [['created_at', 'DESC']],
+            include: [{ model: db.SurveyQuestion, as: 'questions' }]
+        });
+        res.render('anket-yonetim', { user: req.session.user, surveys });
+    } catch (error) {
+        console.error('Anket yönetimi hatası:', error);
+        res.status(500).render('error', { error: 'Anket yönetimi yüklenirken bir hata oluştu' });
+    }
 });
 
 // API routes

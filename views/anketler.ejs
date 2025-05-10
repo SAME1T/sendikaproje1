@@ -5,208 +5,247 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Anketler</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
-        .survey-container {
-            max-width: 800px;
-            margin: 2rem auto;
-            padding: 2rem;
-            background: white;
-            border-radius: 10px;
-            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+        body {
+            min-height: 100vh;
+            margin: 0;
+            background: linear-gradient(120deg, #e0eafc 0%, #cfdef3 100%);
+            background-attachment: fixed;
         }
-        .question-card {
+        .survey-title {
+            font-size: 2.5rem;
+            font-weight: 900;
+            background: linear-gradient(90deg, #2575fc, #6a11cb);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-align: center;
+            margin-bottom: 2rem;
+            letter-spacing: 1px;
+        }
+        .survey-card, .completed-card {
+            border-radius: 22px;
+            box-shadow: 0 4px 24px 0 rgba(31, 38, 135, 0.10);
+            background: #fff;
+            border: none;
+            margin-bottom: 2rem;
+            padding: 2rem 1.5rem 1.5rem 1.5rem;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        .survey-list .survey-item {
+            background: #f9f9f9;
+            border-radius: 18px;
             margin-bottom: 1.5rem;
-            border: 1px solid #e0e0e0;
-            border-radius: 8px;
             padding: 1.5rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.07);
         }
-        .add-question-btn {
-            width: 100%;
-            padding: 1rem;
-            margin-top: 1rem;
+        .badge.bg-secondary, .badge.bg-success {
+            font-size: 1rem;
+            font-weight: 700;
         }
-        .login-btn {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            z-index: 1000;
-        }
-        .survey-list {
-            margin-top: 2rem;
-        }
-        .survey-item {
-            border: 1px solid #e0e0e0;
+        .btn-outline-info, .btn-primary {
+            font-weight: 700;
             border-radius: 8px;
-            padding: 1rem;
+        }
+        .questions label, .questions ul, .questions li {
+            font-size: 1.08rem;
+            font-weight: 600;
+            color: #333;
+        }
+        .completed-card h4 {
+            color: #2575fc;
+            font-weight: 800;
+            margin-bottom: 0.5rem;
+        }
+        .completed-card .badge {
+            font-size: 1rem;
+            margin-bottom: 0.5rem;
+        }
+        .completed-card .icon {
+            font-size: 2.2rem;
+            color: #43e97b;
+            margin-right: 0.5rem;
+            vertical-align: middle;
+        }
+        .survey-card h3 {
+            color: #2575fc;
+            font-weight: 800;
             margin-bottom: 1rem;
+        }
+        .survey-list h2 {
+            font-weight: 900;
+            color: #222;
+            margin-top: 2.5rem;
+        }
+        @media (max-width: 900px) {
+            .main-content { margin-left: 0; padding: 1rem; }
+            .survey-container { max-width: 100%; padding: 1rem; }
+        }
+        @media (max-width: 600px) {
+            .survey-card, .completed-card { padding: 1rem; }
+            .survey-list h2 { font-size: 1.1rem; }
         }
     </style>
 </head>
-<body class="bg-light">
-    <a href="/giris" class="btn btn-primary login-btn">
-        <i class="fas fa-sign-in-alt"></i> Giriş Yap
-    </a>
-
-    <div class="container">
+<body>
+    <div class="main-content">
         <div class="survey-container">
-            <h1 class="text-center mb-4">Anketler</h1>
-            
-            <div class="mb-4">
-                <label class="form-label">Anket Başlığı</label>
-                <input type="text" class="form-control" id="surveyTitle" placeholder="Anket başlığını yazın...">
-            </div>
-            
-            <div id="questions-container">
-                <!-- Questions will be added here dynamically -->
-            </div>
-
-            <button class="btn btn-success add-question-btn" onclick="addQuestion()">
-                <i class="fas fa-plus"></i> Yeni Soru Ekle
-            </button>
-
-            <button class="btn btn-primary add-question-btn" onclick="saveSurvey()">
-                <i class="fas fa-save"></i> Anketi Kaydet
-            </button>
-        </div>
-
-        <div class="survey-list">
-            <h2 class="text-center mb-4">Mevcut Anketler</h2>
-            <div id="surveys-list">
-                <% if (surveys && surveys.length > 0) { %>
-                    <% surveys.forEach(survey => { %>
-                        <div class="survey-item">
-                            <h3><%= survey.title %></h3>
-                            <p class="text-muted">Oluşturan: <%= survey.createdBy.name %> <%= survey.createdBy.surname %></p>
-                            <p class="text-muted">Tarih: <%= new Date(survey.createdAt).toLocaleDateString('tr-TR') %></p>
-                            <div class="questions">
-                                <% survey.questions.forEach((question, index) => { %>
-                                    <div class="mb-3">
-                                        <h5><%= index + 1 %>. <%= question.questionText %></h5>
-                                        <ul>
-                                            <% question.options.forEach(option => { %>
-                                                <li><%= option %></li>
-                                            <% }); %>
-                                        </ul>
-                                    </div>
-                                <% }); %>
-                            </div>
-                        </div>
-                    <% }); %>
+            <h1 class="survey-title">Anketler</h1>
+            <% if (!surveys || surveys.length === 0) { %>
+                <div class="alert alert-warning text-center">Henüz sistemde anket bulunmamaktadır.</div>
+            <% } else { %>
+                <% let answeredSurveyIds = answers.map(a => a.survey_id); %>
+                <% let availableSurveys = surveys.filter(s => !answeredSurveyIds.includes(s.id)); %>
+                <% if (availableSurveys.length === 0) { %>
+                    <div class="alert alert-info text-center">Çözebileceğiniz yeni anket yok.</div>
                 <% } else { %>
-                    <p class="text-center">Henüz anket bulunmamaktadır.</p>
+                    <% for (var s = 0; s < availableSurveys.length; s++) { %>
+                        <% var survey = availableSurveys[s]; %>
+                        <% var surveyId = survey.id; %>
+                        <% var questionCount = survey.questions.length; %>
+                        <form class="mb-5 survey-card" data-survey-id="<%= survey.id %>" data-question-count="<%= survey.questions.length %>" onsubmit="return submitSurvey(event, this)">
+                            <h3><i class="fas fa-poll-h"></i> <%= survey.title %></h3>
+                            <div class="questions">
+                                <% for (var qIdx = 0; qIdx < survey.questions.length; qIdx++) { %>
+                                    <% var question = survey.questions[qIdx]; %>
+                                    <div class="mb-3">
+                                        <label class="form-label"><%= qIdx + 1 %>. <%= question.question_text %> <span class="badge bg-secondary"><%= question.type === 'open' ? 'Açık Uçlu' : 'Çoktan Seçmeli' %></span></label>
+                                        <% if (question.type === 'multiple') { %>
+                                            <% for (var oIdx = 0; oIdx < (question.options || []).length; oIdx++) { %>
+                                                <div class="form-check">
+                                                    <input class="form-check-input" type="radio" name="q<%= qIdx %>" id="q<%= qIdx %>o<%= oIdx %>" value="<%= question.options[oIdx] %>" required>
+                                                    <label class="form-check-label" for="q<%= qIdx %>o<%= oIdx %>"><%= question.options[oIdx] %></label>
+                                                </div>
+                                            <% } %>
+                                        <% } else { %>
+                                            <input type="text" class="form-control" name="q<%= qIdx %>" required>
+                                        <% } %>
+                                        <input type="hidden" name="qid<%= qIdx %>" value="<%= question.id %>">
+                                    </div>
+                                <% } %>
+                            </div>
+                            <button type="submit" class="btn btn-primary"><i class="fas fa-paper-plane"></i> Gönder</button>
+                        </form>
+                    <% } %>
                 <% } %>
-            </div>
+                <div class="survey-list">
+                    <h2 class="text-center mb-4"><i class="fas fa-check-circle"></i> Cevapladığınız Anketler</h2>
+                    <% let completedSurveys = surveys.filter(s => answeredSurveyIds.includes(s.id)); %>
+                    <% if (completedSurveys.length === 0) { %>
+                        <div class="alert alert-secondary text-center">Henüz anket çözmediniz.</div>
+                    <% } else { %>
+                        <% completedSurveys.forEach(survey => { %>
+                            <div class="completed-card mb-3">
+                                <h4><i class="fas fa-poll-h icon"></i> <%= survey.title %></h4>
+                                <span class="badge bg-success"><i class="fas fa-check"></i> Cevaplandı</span>
+                            </div>
+                        <% }); %>
+                    <% } %>
+                </div>
+            <% } %>
         </div>
     </div>
-
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
-        function addQuestion() {
-            const questionsContainer = document.getElementById('questions-container');
-            const questionCount = questionsContainer.children.length + 1;
-            
-            const questionCard = document.createElement('div');
-            questionCard.className = 'question-card';
-            questionCard.innerHTML = `
-                <div class="mb-3">
-                    <label class="form-label">Soru ${questionCount}</label>
-                    <input type="text" class="form-control question-input" placeholder="Sorunuzu yazın...">
-                </div>
-                <div class="mb-3">
-                    <label class="form-label">Seçenekler</label>
-                    <div class="options-container">
-                        <input type="text" class="form-control mb-2 option-input" placeholder="Seçenek 1">
-                        <input type="text" class="form-control mb-2 option-input" placeholder="Seçenek 2">
-                    </div>
-                    <button class="btn btn-sm btn-outline-primary" onclick="addOption(this)">
-                        <i class="fas fa-plus"></i> Seçenek Ekle
-                    </button>
-                </div>
-                <button class="btn btn-danger btn-sm" onclick="removeQuestion(this)">
-                    <i class="fas fa-trash"></i> Soruyu Sil
-                </button>
-            `;
-            
-            questionsContainer.appendChild(questionCard);
-        }
-
-        function addOption(button) {
-            const optionsContainer = button.previousElementSibling;
-            const newOption = document.createElement('input');
-            newOption.type = 'text';
-            newOption.className = 'form-control mb-2 option-input';
-            newOption.placeholder = `Seçenek ${optionsContainer.children.length + 1}`;
-            optionsContainer.appendChild(newOption);
-        }
-
-        function removeQuestion(button) {
-            button.closest('.question-card').remove();
-        }
-
-        async function saveSurvey() {
-            const title = document.getElementById('surveyTitle').value;
-            if (!title) {
-                alert('Lütfen anket başlığı giriniz.');
-                return;
-            }
-
-            const questions = [];
-            const questionCards = document.querySelectorAll('.question-card');
-            
-            questionCards.forEach(card => {
-                const questionText = card.querySelector('.question-input').value;
-                if (!questionText) {
-                    alert('Lütfen tüm soruları doldurunuz.');
-                    return;
+    var allSurveys = <%- JSON.stringify(surveys) %>;
+    var allAnswers = <%- JSON.stringify(answers) %>;
+    // Cevaplanan anketler için grafik çiz
+    document.addEventListener('DOMContentLoaded', function() {
+        if (!allSurveys || !allAnswers) return;
+        allSurveys.forEach(function(survey) {
+            survey.questions.forEach(function(q) {
+                if (q.type === 'multiple') {
+                    var chartContainer = document.getElementById('chart-q-' + q.id + '-' + survey.id);
+                    var participantDiv = document.getElementById('participant-q-' + q.id + '-' + survey.id);
+                    if (!chartContainer) return;
+                    var counts = {};
+                    (q.options || []).forEach(function(opt) { counts[opt] = 0; });
+                    var total = 0;
+                    allAnswers.forEach(function(a) {
+                        if (a.survey_id == survey.id && a.question_id == q.id && a.answer) {
+                            counts[a.answer] = (counts[a.answer] || 0) + 1;
+                            total++;
+                        }
+                    });
+                    var percentages = (q.options || []).map(function(opt) {
+                        return total > 0 ? Math.round((counts[opt] / total) * 100) : 0;
+                    });
+                    if (participantDiv) participantDiv.innerText = 'Katılımcı: ' + total + ' kişi';
+                    chartContainer.innerHTML = '';
+                    var canvas = document.createElement('canvas');
+                    canvas.width = 160; canvas.height = 160;
+                    chartContainer.appendChild(canvas);
+                    new Chart(canvas, {
+                        type: 'doughnut',
+                        data: {
+                            labels: q.options,
+                            datasets: [{
+                                data: percentages,
+                                backgroundColor: [
+                                    'rgba(54, 162, 235, 0.7)',
+                                    'rgba(255, 99, 132, 0.7)',
+                                    'rgba(255, 206, 86, 0.7)',
+                                    'rgba(75, 192, 192, 0.7)',
+                                    'rgba(153, 102, 255, 0.7)',
+                                    'rgba(255, 159, 64, 0.7)'
+                                ],
+                                borderWidth: 2
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            cutout: '70%',
+                            plugins: {
+                                legend: { display: true, position: 'bottom' },
+                                tooltip: {
+                                    callbacks: {
+                                        label: function(context) {
+                                            return context.label + ': ' + context.parsed + '%';
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    });
                 }
-
-                const options = [];
-                const optionInputs = card.querySelectorAll('.option-input');
-                optionInputs.forEach(input => {
-                    if (input.value) {
-                        options.push(input.value);
-                    }
-                });
-
-                if (options.length < 2) {
-                    alert('Her soru için en az 2 seçenek girmelisiniz.');
-                    return;
-                }
-
-                questions.push({
-                    questionText,
-                    options
-                });
             });
-
-            if (questions.length === 0) {
-                alert('Lütfen en az bir soru ekleyiniz.');
-                return;
+        });
+    });
+    async function submitSurvey(e, form) {
+        e.preventDefault();
+        const surveyId = form.getAttribute('data-survey-id');
+        const questionCount = form.getAttribute('data-question-count');
+        const answers = [];
+        for (let i = 0; i < questionCount; i++) {
+            const qid = form.querySelector(`[name='qid${i}']`).value;
+            const input = form.querySelector(`[name='q${i}']:checked`) || form.querySelector(`[name='q${i}']`);
+            if (!input || !input.value) {
+                alert('Lütfen tüm soruları cevaplayınız.');
+                return false;
             }
-
-            try {
-                const response = await fetch('/api/surveys', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ title, questions })
-                });
-
-                if (response.ok) {
-                    alert('Anket başarıyla kaydedildi!');
-                    window.location.reload();
-                } else {
-                    const error = await response.json();
-                    alert('Hata: ' + error.error);
-                }
-            } catch (error) {
-                console.error('Anket kaydetme hatası:', error);
-                alert('Anket kaydedilirken bir hata oluştu.');
-            }
+            answers.push({ question_id: qid, answer: input.value });
         }
+        try {
+            const response = await fetch('/api/survey-answers', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ survey_id: surveyId, answers })
+            });
+            if (response.ok) {
+                alert('Cevaplarınız kaydedildi!');
+                window.location.reload();
+            } else {
+                const error = await response.json();
+                alert('Hata: ' + error.error);
+            }
+        } catch (error) {
+            alert('Cevaplar kaydedilirken bir hata oluştu.');
+        }
+        return false;
+    }
     </script>
-
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
-</html> 
+</html>

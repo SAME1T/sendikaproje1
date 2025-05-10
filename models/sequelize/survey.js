@@ -1,19 +1,7 @@
 const { Model, DataTypes } = require('sequelize');
 
 module.exports = (sequelize) => {
-  class Survey extends Model {
-    static associate(models) {
-      Survey.belongsTo(models.Sendikaci, {
-        foreignKey: 'createdBy',
-        as: 'creator'
-      });
-      Survey.belongsToMany(models.Isci, {
-        through: 'SurveyResponses',
-        foreignKey: 'surveyId',
-        as: 'respondents'
-      });
-    }
-  }
+  class Survey extends Model {}
 
   Survey.init({
     id: {
@@ -28,35 +16,27 @@ module.exports = (sequelize) => {
     description: {
       type: DataTypes.TEXT
     },
-    questions: {
-      type: DataTypes.JSONB,
+    created_by: {
+      type: DataTypes.INTEGER,
       allowNull: false
     },
-    startDate: {
+    created_at: {
       type: DataTypes.DATE,
       defaultValue: DataTypes.NOW
     },
-    endDate: {
-      type: DataTypes.DATE
-    },
     status: {
       type: DataTypes.STRING,
-      defaultValue: 'active'
-    },
-    createdBy: {
-      type: DataTypes.INTEGER,
-      references: {
-        model: 'sendikacilar',
-        key: 'id'
-      }
+      allowNull: false,
+      defaultValue: 'aktif'
     }
   }, {
     sequelize,
     modelName: 'Survey',
-    tableName: 'surveys',
-    timestamps: true,
-    paranoid: true
+    tableName: 'survey',
+    timestamps: false
   });
+
+  // Survey.hasMany(sequelize.models.SurveyQuestion, { foreignKey: 'survey_id', as: 'questions' });
 
   return Survey;
 }; 

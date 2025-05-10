@@ -279,7 +279,7 @@
                 </a>
             </li>
             <li class="nav-item">
-                <a class="nav-link" href="#">
+                <a class="nav-link" href="/anketler">
                     <i class="fas fa-poll"></i> Anketler
                 </a>
             </li>
@@ -346,7 +346,7 @@
                     <div class="card-body">
                         <i class="fas fa-poll fa-3x mb-3 text-primary"></i>
                         <h5 class="card-title">Aktif Anketler</h5>
-                        <p class="card-text display-4">3</p>
+                        <p class="card-text display-4"><span id="active-survey-count">0</span></p>
                     </div>
                 </div>
             </div>
@@ -502,6 +502,12 @@
             userInput.value = message;
             sendMessage();
         }
+
+        fetch('/api/active-survey-count')
+          .then(res => res.json())
+          .then(data => {
+            document.getElementById('active-survey-count').innerText = data.count;
+          });
     </script>
 </body>
 </html> 

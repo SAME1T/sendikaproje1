@@ -7,10 +7,6 @@ module.exports = (sequelize) => {
         foreignKey: 'sendikaciId',
         as: 'messages'
       });
-      Sendikaci.hasMany(models.Survey, {
-        foreignKey: 'sendikaciId',
-        as: 'surveys'
-      });
     }
   }
 

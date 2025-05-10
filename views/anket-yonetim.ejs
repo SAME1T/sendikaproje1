@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Anket Yönetimi</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body {
+            min-height: 100vh;
+            margin: 0;
+            /* Animasyonlu gradient */
+            background: linear-gradient(270deg, #e0eafc, #cfdef3, #f8ffae, #a1c4fd, #c2e9fb, #e0eafc);
+            background-size: 1200% 1200%;
+            animation: gradientBG 18s ease infinite;
+            background-attachment: fixed;
+        }
+        @keyframes gradientBG {
+            0% {background-position:0% 50%}
+            50% {background-position:100% 50%}
+            100% {background-position:0% 50%}
+        }
+        .survey-title {
+            font-size: 2.7rem;
+            font-weight: 900;
+            background: linear-gradient(90deg, #2575fc, #6a11cb);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-align: center;
+            margin-bottom: 2.5rem;
+            letter-spacing: 1px;
+        }
+        .survey-card {
+            border-radius: 22px;
+            box-shadow: 0 4px 24px 0 rgba(31, 38, 135, 0.10);
+            background: #fff;
+            border: none;
+            margin-bottom: 2.5rem;
+            padding: 2.2rem 1.7rem 1.7rem 1.7rem;
+            max-width: 650px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        .survey-list .survey-item {
+            background: #f9f9f9;
+            border-radius: 18px;
+            margin-bottom: 2rem;
+            padding: 2rem 1.5rem 1.5rem 1.5rem;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+        }
+        .survey-item h3 {
+            color: #2575fc;
+            font-weight: 900;
+            margin-bottom: 1.2rem;
+            font-size: 2rem;
+        }
+        .survey-badges {
+            margin-bottom: 1rem;
+            display: flex;
+            gap: 1.2rem;
+            flex-wrap: wrap;
+            justify-content: flex-start;
+            align-items: center;
+        }
+        .survey-badge {
+            font-size: 1.15rem;
+            font-weight: 800;
+            border-radius: 12px;
+            padding: 0.5em 1.2em;
+            background: #e3f0ff;
+            color: #111;
+            display: flex;
+            align-items: center;
+            gap: 0.5em;
+            box-shadow: 0 1px 4px rgba(31,38,135,0.04);
+        }
+        .survey-badge.bg-info {
+            background: #e0f7fa;
+            color: #111;
+        }
+        .survey-badge.bg-primary {
+            background: #e3f0ff;
+            color: #111;
+        }
+        .survey-badge i {
+            font-size: 1.2em;
+        }
+        .btn-outline-info {
+            font-weight: 700;
+            border-radius: 8px;
+            font-size: 1.08rem;
+            padding: 0.45em 1.2em;
+            border-width: 2px;
+            letter-spacing: 0.5px;
+        }
+        .btn-outline-info:focus, .btn-outline-info:hover {
+            background: #2575fc;
+            color: #fff;
+            border-color: #2575fc;
+        }
+        .question-box {
+            background: #f4f8fb;
+            border-radius: 12px;
+            padding: 1rem 1.2rem;
+            margin-bottom: 1.2rem;
+            box-shadow: 0 1px 4px rgba(31,38,135,0.04);
+        }
+        .question-box h5 {
+            font-size: 1.13rem;
+            font-weight: 800;
+            color: #333;
+            margin-bottom: 0.7rem;
+        }
+        .question-box ul {
+            margin-bottom: 0;
+            padding-left: 1.2rem;
+        }
+        .question-box li {
+            font-size: 1.05rem;
+            font-weight: 600;
+            color: #444;
+        }
+        .participant-count {
+            font-size: 1.08rem;
+            color: #2575fc;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+        .main-outer {
+            min-height: 100vh;
+            width: 100vw;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .main-content {
+            width: 100%;
+            max-width: 1600px;
+            display: flex;
+            flex-direction: row;
+            justify-content: center;
+            align-items: flex-start;
+            gap: 5rem;
+            flex-wrap: wrap;
+        }
+        @media (max-width: 900px) {
+            .main-content { flex-direction: column !important; margin-left: 0; padding: 1rem; align-items: center !important; gap:2rem !important; }
+            .survey-container { max-width: 100%; padding: 1rem; }
+            .survey-card, .survey-item { padding: 1.2rem; }
+            .survey-badges { flex-direction: column; align-items: flex-start; gap: 0.7rem; }
+        }
+        @media (max-width: 600px) {
+            .survey-card, .survey-item { padding: 0.7rem; }
+            .survey-title { font-size: 1.3rem; }
+            .main-content { flex-direction: column !important; align-items: center !important; gap:1.2rem !important; }
+            .survey-container, .container { max-width: 100% !important; min-width: 0 !important; }
+            .survey-list { width: 100% !important; }
+            .survey-card { width: 100% !important; }
+            .survey-badges { flex-direction: column; align-items: flex-start; gap: 0.7rem; }
+        }
+    </style>
+</head>
+<body>
+    <div class="main-outer d-flex justify-content-center align-items-center" style="min-height:100vh; width:100vw;">
+        <div class="main-content d-flex flex-row justify-content-center align-items-start gap-5 flex-wrap" style="width:100%; max-width:1600px;">
+            <div class="survey-container flex-shrink-0" style="width:370px; min-width:320px; max-width:420px; margin-bottom:2.5rem; padding:2.2rem 2.2rem 2.5rem 2.2rem; background:#fff; border-radius:22px; box-shadow:0 4px 24px 0 rgba(31,38,135,0.10);">
+                <h2 class="text-center mb-4" style="font-size:2.1rem; font-weight:900; color:#2575fc; letter-spacing:1px;">Anket Oluştur</h2>
+                <div class="mb-4">
+                    <label class="form-label fw-bold" style="color:#222; font-size:1.2rem;">Anket Başlığı</label>
+                    <input type="text" class="form-control" id="surveyTitle" placeholder="Anket başlığını yazın..." style="font-weight:600; color:#222; font-size:1.1rem;">
+                </div>
+                <div class="mb-4">
+                    <label class="form-label fw-bold" style="color:#222; font-size:1.2rem;">Açıklama</label>
+                    <textarea class="form-control" id="surveyDesc" placeholder="Açıklama (isteğe bağlı)" style="font-weight:600; color:#222; font-size:1.1rem;"></textarea>
+                </div>
+                <div id="questions-container"></div>
+                <div class="d-flex gap-3 mt-3">
+                    <button class="btn btn-success flex-fill add-question-btn py-2 fs-5" onclick="addQuestion()">
+                        <i class="fas fa-plus"></i> Soru Ekle
+                    </button>
+                    <button class="btn btn-primary flex-fill add-question-btn py-2 fs-5" onclick="saveSurvey()">
+                        <i class="fas fa-save"></i> Kaydet
+                    </button>
+                </div>
+            </div>
+            <div class="container py-4 d-flex flex-column align-items-center flex-grow-1" style="min-width:340px; max-width:900px;">
+                <h1 class="survey-title" style="font-size:2.7rem;">Anket Yönetimi</h1>
+                <div class="survey-list w-100 d-flex flex-column align-items-center">
+                    <h2 class="text-center mb-4" style="font-size:1.7rem;">Oluşturduğunuz Anketler ve Sonuçlar</h2>
+                    <% if (surveys && surveys.length > 0) { %>
+                        <% for (var s = 0; s < surveys.length; s++) { var survey = surveys[s]; %>
+                            <div class="survey-item survey-card mb-5 w-100" style="max-width:700px;">
+                                <h3 style="font-size:2rem; font-weight:900; color:#2575fc;"><%= survey.title %></h3>
+                                <div class="survey-badges d-flex gap-3 mb-3">
+                                    <span class="survey-badge bg-primary" style="font-size:1.1rem;"><i class="fas fa-users"></i> Katılımcı: <span id="participant-count-<%= survey.id %>">-</span></span>
+                                    <span class="survey-badge bg-info" style="font-size:1.1rem;"><i class="fas fa-check-double"></i> Toplam Cevap: <span id="answer-count-<%= survey.id %>">-</span></span>
+                                    <button class="btn btn-sm btn-outline-danger ms-auto px-3 py-2 fs-6" onclick="deleteSurvey(<%= survey.id %>, this)"><i class="fas fa-trash"></i> Sil</button>
+                                </div>
+                                <div class="questions mb-4">
+                                    <% for (var index = 0; index < survey.questions.length; index++) { var question = survey.questions[index]; %>
+                                        <div class="question-box mb-4" style="font-size:1.15rem;">
+                                            <h5 style="font-size:1.2rem; font-weight:800; color:#333;">
+                                                <%= index + 1 %>. <%= question.question_text %> <span class="badge bg-secondary" style="font-size:1rem;"> <%= question.type === 'open' ? 'Açık Uçlu' : 'Çoktan Seçmeli' %></span>
+                                            </h5>
+                                            <% if (question.type === 'multiple') { %>
+                                                <ul style="font-size:1.1rem;">
+                                                    <% for (var o = 0; o < (question.options || []).length; o++) { %>
+                                                        <li><%= question.options[o] %></li>
+                                                    <% } %>
+                                                </ul>
+                                            <% } %>
+                                        </div>
+                                    <% } %>
+                                </div>
+                                <div id="results-<%= survey.id %>" class="mb-2"></div>
+                            </div>
+                        <% } %>
+                    <% } else { %>
+                        <p class="text-center">Henüz anket bulunmamaktadır.</p>
+                    <% } %>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+    // EJS'den JS'ye veri aktarımı
+    var allSurveys = <%- JSON.stringify(surveys) %>;
+    var allAnswers = [];
+    // Katılımcı ve cevap sayısı göster + sonuçları otomatik göster
+    window.addEventListener('DOMContentLoaded', async function() {
+        for (var i = 0; i < allSurveys.length; i++) {
+            var survey = allSurveys[i];
+            // Cevapları çek
+            const res = await fetch(`/api/survey-results/${survey.id}`);
+            const answers = await res.json();
+            allAnswers[survey.id] = answers;
+            // Katılımcı sayısı (farklı user_id)
+            document.getElementById('participant-count-' + survey.id).innerText = new Set(answers.map(a => a.user_id)).size;
+            document.getElementById('answer-count-' + survey.id).innerText = answers.length;
+            // Sonuçları otomatik göster
+            showResults(survey.id, true);
+        }
+    });
+    function addQuestion() {
+        const questionsContainer = document.getElementById('questions-container');
+        const questionCount = questionsContainer.children.length + 1;
+        const questionCard = document.createElement('div');
+        questionCard.className = 'question-card';
+        questionCard.innerHTML = `
+            <div class="mb-3">
+                <label class="form-label">Soru ${questionCount}</label>
+                <input type="text" class="form-control question-input" placeholder="Sorunuzu yazın...">
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Soru Tipi</label>
+                <select class="form-select question-type" onchange="toggleOptions(this)">
+                    <option value="multiple">Çoktan Seçmeli</option>
+                    <option value="open">Açık Uçlu</option>
+                </select>
+            </div>
+            <div class="mb-3 options-area">
+                <label class="form-label">Seçenekler</label>
+                <div class="options-container">
+                    <input type="text" class="form-control mb-2 option-input" placeholder="Seçenek 1">
+                    <input type="text" class="form-control mb-2 option-input" placeholder="Seçenek 2">
+                </div>
+                <button class="btn btn-sm btn-outline-primary" type="button" onclick="addOption(this)">
+                    <i class="fas fa-plus"></i> Seçenek Ekle
+                </button>
+            </div>
+            <button class="btn btn-danger btn-sm" type="button" onclick="removeQuestion(this)">
+                <i class="fas fa-trash"></i> Soruyu Sil
+            </button>
+        `;
+        questionsContainer.appendChild(questionCard);
+    }
+    function toggleOptions(select) {
+        const optionsArea = select.closest('.question-card').querySelector('.options-area');
+        if (select.value === 'multiple') {
+            optionsArea.style.display = '';
+        } else {
+            optionsArea.style.display = 'none';
+        }
+    }
+    function addOption(button) {
+        const optionsContainer = button.previousElementSibling;
+        const newOption = document.createElement('input');
+        newOption.type = 'text';
+        newOption.className = 'form-control mb-2 option-input';
+        newOption.placeholder = `Seçenek ${optionsContainer.children.length + 1}`;
+        optionsContainer.appendChild(newOption);
+    }
+    function removeQuestion(button) {
+        button.closest('.question-card').remove();
+    }
+    async function saveSurvey() {
+        const title = document.getElementById('surveyTitle').value;
+        const description = document.getElementById('surveyDesc').value;
+        const questions = [];
+        const questionCards = document.querySelectorAll('.question-card');
+        for (let card of questionCards) {
+            const questionText = card.querySelector('.question-input').value;
+            const type = card.querySelector('.question-type').value;
+            if (!questionText) {
+                alert('Lütfen tüm soruları doldurunuz.');
+                return;
+            }
+            let options = [];
+            if (type === 'multiple') {
+                const optionInputs = card.querySelectorAll('.option-input');
+                optionInputs.forEach(input => {
+                    if (input.value) options.push(input.value);
+                });
+                if (options.length < 2) {
+                    alert('Her çoktan seçmeli soru için en az 2 seçenek giriniz.');
+                    return;
+                }
+            }
+            questions.push({ questionText, type, options });
+        }
+        if (questions.length === 0) {
+            alert('Lütfen en az bir soru ekleyiniz.');
+            return;
+        }
+        try {
+            const response = await fetch('/api/surveys', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ title, description, questions })
+            });
+            if (response.ok) {
+                alert('Anket başarıyla kaydedildi!');
+                window.location.reload();
+            } else {
+                const error = await response.json();
+                alert('Hata: ' + error.error);
+            }
+        } catch (error) {
+            alert('Anket kaydedilirken bir hata oluştu.');
+        }
+    }
+    // Sonuçları otomatik gösteren fonksiyon
+    async function showResults(surveyId, auto) {
+        const chartDiv = document.getElementById('results-' + surveyId);
+        chartDiv.style.display = '';
+        if (!chartDiv.dataset.loaded) {
+            let answers = allAnswers[surveyId];
+            if (!answers) {
+                const res = await fetch(`/api/survey-results/${surveyId}`);
+                answers = await res.json();
+            }
+            const survey = allSurveys.find(function(s) { return s.id == surveyId; });
+            chartDiv.innerHTML = '';
+            survey.questions.forEach(function(q, idx) {
+                if (q.type === 'multiple') {
+                    const counts = {};
+                    (q.options || []).forEach(function(opt) { counts[opt] = 0; });
+                    let total = 0;
+                    answers.forEach(function(a) {
+                        if (a.question_id == q.id && a.answer) {
+                            counts[a.answer] = (counts[a.answer] || 0) + 1;
+                            total++;
+                        }
+                    });
+                    const percentages = (q.options || []).map(function(opt) {
+                        return total > 0 ? Math.round((counts[opt] / total) * 100) : 0;
+                    });
+                    // Katılımcı sayısı
+                    var participantDiv = document.createElement('div');
+                    participantDiv.className = 'participant-count mb-2';
+                    participantDiv.innerText = 'Katılımcı: ' + new Set(answers.filter(a => a.question_id == q.id).map(a => a.user_id)).size + ' kişi';
+                    chartDiv.appendChild(participantDiv);
+                    // Doughnut chart
+                    var chartContainer = document.createElement('div');
+                    chartContainer.className = 'doughnut-chart mb-3 d-flex justify-content-center';
+                    chartDiv.appendChild(chartContainer);
+                    var canvas = document.createElement('canvas');
+                    canvas.width = 200; canvas.height = 200;
+                    chartContainer.appendChild(canvas);
+                    new Chart(canvas, {
+                        type: 'doughnut',
+                        data: {
+                            labels: q.options,
+                            datasets: [{
+                                data: percentages,
+                                backgroundColor: [
+                                    'rgba(54, 162, 235, 0.7)',
+                                    'rgba(255, 99, 132, 0.7)',
+                                    'rgba(255, 206, 86, 0.7)',
+                                    'rgba(75, 192, 192, 0.7)',
+                                    'rgba(153, 102, 255, 0.7)',
+                                    'rgba(255, 159, 64, 0.7)'
+                                ],
+                                borderWidth: 2
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            cutout: '70%',
+                            plugins: {
+                                legend: { display: true, position: 'bottom' },
+                                tooltip: {
+                                    callbacks: {
+                                        label: function(context) {
+                                            return context.label + ': ' + context.parsed + '%';
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    });
+                }
+            });
+            chartDiv.dataset.loaded = '1';
+        }
+    }
+    async function deleteSurvey(surveyId, btn) {
+        if (!confirm('Bu anketi silmek istediğinize emin misiniz?')) return;
+        btn.disabled = true;
+        try {
+            const res = await fetch(`/api/surveys/${surveyId}`, { method: 'DELETE' });
+            if (res.ok) {
+                btn.closest('.survey-item').remove();
+            } else {
+                alert('Silme işlemi başarısız.');
+                btn.disabled = false;
+            }
+        } catch (e) {
+            alert('Bir hata oluştu.');
+            btn.disabled = false;
+        }
+    }
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html> 
