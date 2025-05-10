@@ -8,18 +8,12 @@ const rateLimit = require('express-rate-limit');
 const apiConfig = require('./config/api.config');
 require('dotenv').config();
 const { Pool } = require('pg');
-
-// Model importları
-// const User = require('./models/user'); // Eğer kullanılmıyorsa kaldırılabilir
-// const Message = require('./models/message'); // KALDIRILDI
-// const Survey = require('./models/survey'); // KALDIRILDI
-// const Sendikaci = require('./models/sendikaci'); // KALDIRILDI
-// const Isci = require('./models/isci'); // KALDIRILDI
 const db = require('./models/sequelize');
 const Message = db.Message;
 const Survey = db.Survey;
 const Sendikaci = db.Sendikaci;
 const Isci = db.Isci;
+const Payroll = db.Payroll;
 
 const app = express();
 
@@ -432,37 +426,68 @@ app.post('/sifremi-unuttum', async (req, res) => {
 });
 
 // Bordrolarım (işçi)
-app.get('/bordrolarim', (req, res) => {
+app.get('/bordrolarim', async (req, res) => {
     if (!req.session.userId || req.session.userType !== 'isci') {
         return res.redirect('/giris/isci');
     }
-    res.render('bordrolarim', { user: req.session.user });
+    // İşçinin bordrolarını çek
+    const payrolls = await db.Payroll.findAll({ where: { user_id: req.session.userId }, order: [['payroll_date', 'DESC']] });
+    // Toplam bordro sayısı
+    const toplamBordro = payrolls.length;
+    // Son bordro tarihi
+    let sonBordro = '-';
+    if (payrolls.length > 0) {
+        const tarih = payrolls[0].payroll_date;
+        if (tarih) {
+            const dateObj = new Date(tarih);
+            const aylar = ['Ocak', 'Şubat', 'Mart', 'Nisan', 'Mayıs', 'Haziran', 'Temmuz', 'Ağustos', 'Eylül', 'Ekim', 'Kasım', 'Aralık'];
+            sonBordro = dateObj.getFullYear() + ' ' + aylar[dateObj.getMonth()];
+        }
+    }
+    // Yıllık toplam (bu yılın bordroları)
+    const buYil = new Date().getFullYear();
+    const yillikToplam = payrolls.filter(p => p.payroll_date && new Date(p.payroll_date).getFullYear() === buYil)
+        .reduce((sum, p) => sum + Number(p.amount), 0);
+    res.render('bordrolarim', { user: req.session.user, payrolls, toplamBordro, sonBordro, yillikToplam });
 });
 
 // Bordro Yönetim (sendikacı)
-app.get('/bordro-yonetim', (req, res) => {
+app.get('/bordro-yonetim', async (req, res) => {
     if (!req.session.userId || req.session.userType !== 'sendikaci') {
         return res.redirect('/giris/sendikaci');
     }
-    res.render('bordro-yonetim', { user: req.session.user });
+    // Tüm işçileri users tablosundan çek
+    const isciler = await pool.query('SELECT id, ad, soyad, tc FROM users WHERE rol = 1');
+    const payrolls = await db.Payroll.findAll({ order: [['created_at', 'DESC']] });
+    // Toplam bordro sayısı
+    const toplamBordro = payrolls.length;
+    // Son gönderim tarihi
+    let sonGonderim = '-';
+    if (payrolls.length > 0) {
+        const tarih = payrolls[0].payroll_date;
+        if (tarih) {
+            const dateObj = new Date(tarih);
+            const aylar = ['Ocak', 'Şubat', 'Mart', 'Nisan', 'Mayıs', 'Haziran', 'Temmuz', 'Ağustos', 'Eylül', 'Ekim', 'Kasım', 'Aralık'];
+            sonGonderim = dateObj.getFullYear() + ' ' + aylar[dateObj.getMonth()];
+        }
+    }
+    // Bekleyen bordro sayısı (örnek: description veya pdf_path eksik olanlar bekliyor kabul edilsin)
+    const bekleyenBordro = payrolls.filter(p => !p.pdf_path).length;
+    res.render('bordro-yonetim', { user: req.session.user, isciler: isciler.rows, payrolls, toplamBordro, sonGonderim, bekleyenBordro });
 });
 
 // API routes
 app.use('/api', require('./routes/api'));
 
-// Veritabanı bağlantı testi
-db.sequelize.authenticate()
-  .then(() => {
-    console.log('Veritabanı bağlantısı başarılı.');
-    // Test sorgusu
-    return db.sequelize.query('SELECT COUNT(*) FROM users', { type: db.Sequelize.QueryTypes.SELECT });
-  })
-  .then(result => {
-    console.log('Users tablosunda toplam kayıt sayısı:', result[0].count);
-  })
-  .catch(err => {
-    console.error('Veritabanı bağlantı hatası:', err);
-  });
+// Sequelize bağlantı testi
+(async () => {
+  try {
+    await db.sequelize.authenticate();
+    console.log('Sequelize ile veritabanı bağlantısı başarılı!');
+  } catch (error) {
+    console.error('Sequelize bağlantı hatası:', error);
+  }
+})();
 
 // Server başlatma
 const PORT = apiConfig.apiPort;

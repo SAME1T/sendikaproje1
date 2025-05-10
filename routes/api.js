@@ -6,6 +6,7 @@ const { verifyToken } = require('../middleware/auth');
 const config = require('../config/api.config');
 const db = require('../models/sequelize');
 const { Op } = require('sequelize');
+const payrollRouter = require('./payroll');
 
 // Login endpoint
 router.post('/login', async (req, res) => {
@@ -131,5 +132,7 @@ router.get('/user/:id', verifyToken, async (req, res) => {
     });
   }
 });
+
+router.use('/payrolls', payrollRouter);
 
 module.exports = router; 

@@ -6,6 +6,7 @@
     <title>Bordrolarım</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
     <style>
         body {
             min-height: 100vh;
@@ -54,7 +55,7 @@
                         <div class="card text-center border-0 shadow-sm">
                             <div class="card-body">
                                 <div class="fw-bold text-secondary">Toplam Bordro</div>
-                                <div class="fs-3 fw-bold text-primary">12</div>
+                                <div class="fs-3 fw-bold text-primary"><%= toplamBordro %></div>
                             </div>
                         </div>
                     </div>
@@ -62,7 +63,7 @@
                         <div class="card text-center border-0 shadow-sm">
                             <div class="card-body">
                                 <div class="fw-bold text-secondary">Son Bordro</div>
-                                <div class="fs-5 fw-bold text-success">2024 Nisan</div>
+                                <div class="fs-5 fw-bold text-success"><%= sonBordro %></div>
                             </div>
                         </div>
                     </div>
@@ -70,7 +71,7 @@
                         <div class="card text-center border-0 shadow-sm">
                             <div class="card-body">
                                 <div class="fw-bold text-secondary">Yıllık Toplam</div>
-                                <div class="fs-5 fw-bold text-warning">380.000 TL</div>
+                                <div class="fs-5 fw-bold text-warning"><%= yillikToplam.toLocaleString('tr-TR') %> TL</div>
                             </div>
                         </div>
                     </div>
@@ -79,39 +80,48 @@
                     <div class="card-body p-4">
                         <h5 class="card-title mb-4 text-primary">Bordro Listesi</h5>
                         <div class="table-responsive">
-                            <table class="table table-hover align-middle mb-0 bordro-table">
-                                <thead class="table-light">
+                            <table class="table table-hover align-middle mb-0 bordro-table table-striped table-bordered rounded-3 overflow-hidden">
+                                <thead class="table-primary">
                                     <tr>
                                         <th scope="col">Dönem</th>
                                         <th scope="col">Net Maaş</th>
+                                        <th scope="col">Mesaj Notu</th>
                                         <th scope="col">Bordro</th>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    <tr>
-                                        <td>2024 Nisan</td>
-                                        <td>32.500 TL</td>
-                                        <td>
-                                            <a href="#" class="btn btn-sm btn-outline-primary me-2"><i class="fas fa-download"></i> İndir</a>
-                                            <a href="#" class="btn btn-sm btn-outline-secondary"><i class="fas fa-eye"></i> Görüntüle</a>
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <td>2024 Mart</td>
-                                        <td>31.800 TL</td>
-                                        <td>
-                                            <a href="#" class="btn btn-sm btn-outline-primary me-2"><i class="fas fa-download"></i> İndir</a>
-                                            <a href="#" class="btn btn-sm btn-outline-secondary"><i class="fas fa-eye"></i> Görüntüle</a>
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <td>2024 Şubat</td>
-                                        <td>30.900 TL</td>
-                                        <td>
-                                            <a href="#" class="btn btn-sm btn-outline-primary me-2"><i class="fas fa-download"></i> İndir</a>
-                                            <a href="#" class="btn btn-sm btn-outline-secondary"><i class="fas fa-eye"></i> Görüntüle</a>
-                                        </td>
-                                    </tr>
+                                    <% if (payrolls.length === 0) { %>
+                                        <tr><td colspan="4" class="text-center text-muted">Bordro bulunamadı.</td></tr>
+                                    <% } else { %>
+                                        <% payrolls.forEach(function(bordro) { %>
+                                            <tr class="align-middle">
+                                                <td><span class="fw-semibold"><%= bordro.payroll_date %></span></td>
+                                                <td><span class="text-primary fw-bold"><%= bordro.amount %> TL</span></td>
+                                                <td>
+                                                    <% if (bordro.description && bordro.description.trim() !== '') { %>
+                                                        <span class="badge bg-info text-dark shadow-sm" data-bs-toggle="tooltip" title="<%= bordro.description %>">
+                                                            <%= bordro.description.length > 20 ? bordro.description.slice(0, 20) + '...' : bordro.description %>
+                                                        </span>
+                                                    <% } else { %>
+                                                        <span class="text-muted">-</span>
+                                                    <% } %>
+                                                </td>
+                                                <td>
+                                                    <% if (bordro.pdf_path) { %>
+                                                        <a href="<%= bordro.pdf_path %>" class="btn btn-outline-primary btn-sm me-2 animate__animated animate__fadeIn" download>
+                                                            <i class="fas fa-download"></i> İndir
+                                                        </a>
+                                                        <a href="<%= bordro.pdf_path %>" class="btn btn-outline-secondary btn-sm animate__animated animate__fadeIn" target="_blank">
+                                                            <i class="fas fa-eye"></i> Görüntüle
+                                                        </a>
+                                                    <% } else { %>
+                                                        <button class="btn btn-outline-secondary btn-sm" disabled><i class="fas fa-download"></i> İndir</button>
+                                                        <button class="btn btn-outline-secondary btn-sm" disabled><i class="fas fa-eye"></i> Görüntüle</button>
+                                                    <% } %>
+                                                </td>
+                                            </tr>
+                                        <% }); %>
+                                    <% } %>
                                 </tbody>
                             </table>
                         </div>
@@ -127,5 +137,12 @@
             </div>
         </div>
     </div>
+    <script>
+    // Bootstrap tooltip aktif et
+    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+      return new bootstrap.Tooltip(tooltipTriggerEl);
+    });
+    </script>
 </body>
 </html> 

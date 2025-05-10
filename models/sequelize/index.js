@@ -26,6 +26,7 @@ db.Isci = require('./isci')(sequelize);
 db.Message = require('./message')(sequelize);
 db.Survey = require('./survey')(sequelize);
 db.AnonymousData = require('./anonymousData')(sequelize);
+db.Payroll = require('./payroll')(sequelize);
 
 // Associations
 Object.values(db).forEach((model) => {
