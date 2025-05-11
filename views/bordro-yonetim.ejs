@@ -79,6 +79,101 @@
                 <div class="alert alert-warning mb-4 shadow-sm" style="font-size:0.98rem;">
                     <b>Bordro Yükleme Talimatı:</b> Bordro dosyalarını yükleyip ilgili işçiye gönderebilirsiniz. Gönderim sonrası işçi bordrosunu görüntüleyip indirebilir.
                 </div>
+                <!-- Bordro Gönderme Formu -->
+                <div class="card mb-4 bordro-card">
+                  <div class="card-body">
+                    <h5 class="card-title text-primary mb-3">İşçiye Bordro Gönder</h5>
+                    <form action="/bordro-yonetim" method="POST" enctype="multipart/form-data">
+                      <div class="row g-3 align-items-end">
+                        <div class="col-md-3">
+                          <label class="form-label">İşçi Seç</label>
+                          <select name="user_id" class="form-select" required>
+                            <option value="">Seçiniz</option>
+                            <% isciler.forEach(function(isci) { %>
+                              <option value="<%= isci.id %>"><%= isci.ad %> <%= isci.soyad %> (TC: <%= isci.tc %>)</option>
+                            <% }); %>
+                          </select>
+                        </div>
+                        <div class="col-md-2">
+                          <label class="form-label">Dönem</label>
+                          <input type="month" name="payroll_date" class="form-control" required>
+                        </div>
+                        <div class="col-md-2">
+                          <label class="form-label">Net Maaş (TL)</label>
+                          <input type="number" name="amount" class="form-control" step="0.01" min="0" required>
+                        </div>
+                        <div class="col-md-3">
+                          <label class="form-label">Açıklama</label>
+                          <input type="text" name="description" class="form-control" maxlength="100">
+                        </div>
+                        <div class="col-md-2">
+                          <label class="form-label">PDF Bordro</label>
+                          <input type="file" name="pdf" class="form-control" accept="application/pdf">
+                        </div>
+                      </div>
+                      <div class="mt-3 text-end">
+                        <button type="submit" class="btn btn-success"><i class="fas fa-paper-plane"></i> Gönder</button>
+                      </div>
+                    </form>
+                  </div>
+                </div>
+                <!-- Geçmiş Gönderimler Tablosu -->
+                <div class="card bordro-card shadow border-0 mb-4">
+                  <div class="card-body p-4">
+                    <h5 class="card-title mb-4 text-primary">Geçmiş Bordro Gönderimleri</h5>
+                    <div class="table-responsive">
+                      <table class="table table-hover align-middle mb-0 bordro-table table-striped table-bordered rounded-3 overflow-hidden">
+                        <thead class="table-primary">
+                          <tr>
+                            <th scope="col">İşçi</th>
+                            <th scope="col">Dönem</th>
+                            <th scope="col">Net Maaş</th>
+                            <th scope="col">Açıklama</th>
+                            <th scope="col">Bordro</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          <% if (payrolls.length === 0) { %>
+                            <tr><td colspan="5" class="text-center text-muted">Bordro gönderimi bulunamadı.</td></tr>
+                          <% } else { %>
+                            <% payrolls.forEach(function(bordro) { %>
+                              <tr class="align-middle">
+                                <td>
+                                  <% let isci = isciler.find(i => i.id === bordro.user_id); %>
+                                  <%= isci ? (isci.ad + ' ' + isci.soyad + ' (TC: ' + isci.tc + ')') : 'İşçi bulunamadı' %>
+                                </td>
+                                <td><span class="fw-semibold"><%= bordro.payroll_date %></span></td>
+                                <td><span class="text-primary fw-bold"><%= bordro.amount %> TL</span></td>
+                                <td>
+                                  <% if (bordro.description && bordro.description.trim() !== '') { %>
+                                    <span class="badge bg-info text-dark shadow-sm" data-bs-toggle="tooltip" title="<%= bordro.description %>">
+                                      <%= bordro.description.length > 20 ? bordro.description.slice(0, 20) + '...' : bordro.description %>
+                                    </span>
+                                  <% } else { %>
+                                    <span class="text-muted">-</span>
+                                  <% } %>
+                                </td>
+                                <td>
+                                  <% if (bordro.pdf_path) { %>
+                                    <a href="<%= bordro.pdf_path %>" class="btn btn-outline-primary btn-sm me-2 animate__animated animate__fadeIn" download>
+                                      <i class="fas fa-download"></i> İndir
+                                    </a>
+                                    <a href="<%= bordro.pdf_path %>" class="btn btn-outline-secondary btn-sm animate__animated animate__fadeIn" target="_blank">
+                                      <i class="fas fa-eye"></i> Görüntüle
+                                    </a>
+                                  <% } else { %>
+                                    <button class="btn btn-outline-secondary btn-sm" disabled><i class="fas fa-download"></i> İndir</button>
+                                    <button class="btn btn-outline-secondary btn-sm" disabled><i class="fas fa-eye"></i> Görüntüle</button>
+                                  <% } %>
+                                </td>
+                              </tr>
+                            <% }); %>
+                          <% } %>
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                </div>
             </div>
         </div>
     </div>

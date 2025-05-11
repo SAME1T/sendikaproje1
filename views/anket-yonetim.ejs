@@ -37,23 +37,17 @@
             background: #fff;
             border: none;
             margin-bottom: 2.5rem;
-            padding: 2.2rem 1.7rem 1.7rem 1.7rem;
-            max-width: 650px;
+            padding: 1.2rem 1.2rem 1.7rem 1.2rem !important;
+            max-width: 600px !important;
             margin-left: auto;
             margin-right: auto;
         }
         .survey-list .survey-item {
             background: #f9f9f9;
             border-radius: 18px;
-            margin-bottom: 2rem;
-            padding: 2rem 1.5rem 1.5rem 1.5rem;
-            box-shadow: 0 2px 12px rgba(0,0,0,0.08);
-        }
-        .survey-item h3 {
-            color: #2575fc;
-            font-weight: 900;
-            margin-bottom: 1.2rem;
-            font-size: 2rem;
+            margin-bottom: 2.5rem;
+            padding: 1.2rem 1.2rem 1.7rem 1.2rem !important;
+            box-shadow: 0 2px 12px rgba(31,38,135,0.08);
         }
         .survey-badges {
             margin-bottom: 1rem;
@@ -99,33 +93,51 @@
             color: #fff;
             border-color: #2575fc;
         }
+        .questions {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.2rem;
+        }
         .question-box {
             background: #f4f8fb;
             border-radius: 12px;
-            padding: 1rem 1.2rem;
-            margin-bottom: 1.2rem;
+            padding: 0.7rem 0.7rem 0.7rem 0.7rem !important;
+            margin-bottom: 0;
             box-shadow: 0 1px 4px rgba(31,38,135,0.04);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            min-width: 0;
         }
         .question-box h5 {
-            font-size: 1.13rem;
-            font-weight: 800;
+            font-size: 1.08rem;
+            font-weight: 700;
             color: #333;
-            margin-bottom: 0.7rem;
+            margin-bottom: 0.5rem;
+            text-align: center;
         }
         .question-box ul {
-            margin-bottom: 0;
+            margin-bottom: 0.5rem;
             padding-left: 1.2rem;
         }
         .question-box li {
-            font-size: 1.05rem;
+            font-size: 0.98rem;
             font-weight: 600;
             color: #444;
         }
+        .chart-container, .doughnut-chart {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 0.3rem 0 0.3rem 0;
+        }
         .participant-count {
-            font-size: 1.08rem;
+            font-size: 0.98rem;
             color: #2575fc;
-            font-weight: 700;
-            margin-bottom: 0.5rem;
+            font-weight: 600;
+            margin-bottom: 0.2rem;
+            text-align: center;
         }
         .main-outer {
             min-height: 100vh;
@@ -149,15 +161,17 @@
             .survey-container { max-width: 100%; padding: 1rem; }
             .survey-card, .survey-item { padding: 1.2rem; }
             .survey-badges { flex-direction: column; align-items: flex-start; gap: 0.7rem; }
+            .questions { grid-template-columns: 1fr; gap: 0.7rem; }
+            .survey-card, .survey-item { max-width: 100% !important; }
         }
         @media (max-width: 600px) {
-            .survey-card, .survey-item { padding: 0.7rem; }
-            .survey-title { font-size: 1.3rem; }
-            .main-content { flex-direction: column !important; align-items: center !important; gap:1.2rem !important; }
+            .survey-card, .survey-item { padding: 0.4rem !important; }
+            .survey-title { font-size: 1.1rem; }
+            .main-content { flex-direction: column !important; align-items: center !important; gap:1rem !important; }
             .survey-container, .container { max-width: 100% !important; min-width: 0 !important; }
             .survey-list { width: 100% !important; }
             .survey-card { width: 100% !important; }
-            .survey-badges { flex-direction: column; align-items: flex-start; gap: 0.7rem; }
+            .survey-badges { flex-direction: column; align-items: flex-start; gap: 0.5rem; }
         }
     </style>
 </head>
@@ -199,16 +213,15 @@
                                 </div>
                                 <div class="questions mb-4">
                                     <% for (var index = 0; index < survey.questions.length; index++) { var question = survey.questions[index]; %>
-                                        <div class="question-box mb-4" style="font-size:1.15rem;">
-                                            <h5 style="font-size:1.2rem; font-weight:800; color:#333;">
-                                                <%= index + 1 %>. <%= question.question_text %> <span class="badge bg-secondary" style="font-size:1rem;"> <%= question.type === 'open' ? 'Açık Uçlu' : 'Çoktan Seçmeli' %></span>
-                                            </h5>
+                                        <div class="question-box mb-2" style="font-size:1.05rem;">
+                                            <h5><%= index + 1 %>. <%= question.question_text %> <span class="badge bg-secondary" style="font-size:0.95rem;"> <%= question.type === 'open' ? 'Açık Uçlu' : 'Çoktan Seçmeli' %></span></h5>
                                             <% if (question.type === 'multiple') { %>
-                                                <ul style="font-size:1.1rem;">
+                                                <ul style="font-size:0.98rem;">
                                                     <% for (var o = 0; o < (question.options || []).length; o++) { %>
                                                         <li><%= question.options[o] %></li>
                                                     <% } %>
                                                 </ul>
+                                                <div id="results-q-<%= question.id %>-<%= survey.id %>" class="chart-container"></div>
                                             <% } %>
                                         </div>
                                     <% } %>
@@ -373,11 +386,11 @@
                     participantDiv.innerText = 'Katılımcı: ' + new Set(answers.filter(a => a.question_id == q.id).map(a => a.user_id)).size + ' kişi';
                     chartDiv.appendChild(participantDiv);
                     // Doughnut chart
-                    var chartContainer = document.createElement('div');
-                    chartContainer.className = 'doughnut-chart mb-3 d-flex justify-content-center';
-                    chartDiv.appendChild(chartContainer);
+                    var chartContainer = document.getElementById('results-q-' + q.id + '-' + survey.id);
+                    if (!chartContainer) return;
+                    chartContainer.innerHTML = '';
                     var canvas = document.createElement('canvas');
-                    canvas.width = 200; canvas.height = 200;
+                    canvas.width = 110; canvas.height = 110;
                     chartContainer.appendChild(canvas);
                     new Chart(canvas, {
                         type: 'doughnut',
@@ -397,10 +410,10 @@
                             }]
                         },
                         options: {
-                            responsive: true,
+                            responsive: false,
                             cutout: '70%',
                             plugins: {
-                                legend: { display: true, position: 'bottom' },
+                                legend: { display: false },
                                 tooltip: {
                                     callbacks: {
                                         label: function(context) {
