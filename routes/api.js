@@ -182,6 +182,9 @@ router.post('/survey-answers', async (req, res) => {
         created_at: new Date()
       });
     }
+    // Anket katılımı tablosuna ekle
+    const pool = require('../db');
+    await pool.query('INSERT INTO anket_katilimlari (user_id, anket_id) VALUES ($1, $2)', [req.session.userId, survey_id]);
     res.status(201).json({ success: true });
   } catch (error) {
     console.error('Cevap kaydetme hatası:', error);

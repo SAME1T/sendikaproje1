@@ -33,6 +33,7 @@ const upload = multer({ storage: storage, fileFilter: (req, file, cb) => {
   }
   cb(null, true);
 }});
+const { aktiflikPuaniHesapla, sendikaUcretiHesapla } = require('./utils/aktiflikHesaplama');
 
 const app = express();
 
@@ -336,35 +337,48 @@ app.get('/api/surveys', async (req, res) => {
 
 // İşçi dashboard sayfası
 app.get('/dashboard/isci', async (req, res) => {
-    try {
-        if (!req.session.userId || req.session.userType !== 'isci') {
-            return res.redirect('/giris/isci');
-        }
+    if (!req.session.userId || req.session.userType !== 'isci') {
+        return res.redirect('/isci-giris');
+    }
 
-        // İşçi (rol=1) toplam üye sayısını çek
+    try {
+        // Aktiflik puanını hesapla
+        const aktiflikPuani = await aktiflikPuaniHesapla(req.session.userId);
+        
+        // Sendika ücretini hesapla
+        const ucretBilgisi = await sendikaUcretiHesapla(req.session.userId);
+
+        // Toplam üye sayısını çek (rol=1 olanlar)
         const result = await pool.query(
             'SELECT COUNT(*) as count FROM users WHERE rol = 1'
         );
         const uyeSayisi = result.rows[0].count;
 
-        // Dashboard sayfasını render et
-        res.render('isci-dashboard', { 
+        res.render('isci-dashboard', {
             user: req.session.user,
-            uyeSayisi: uyeSayisi,
-            activeTab: 'dashboard'
+            aktiflikPuani: aktiflikPuani,
+            saatlikMaas: ucretBilgisi.saatlikMaas,
+            ucret: ucretBilgisi.ucret,
+            uyeSayisi: uyeSayisi
         });
     } catch (error) {
-        console.error('Dashboard hatası:', error);
-        res.status(500).render('error', { error: 'Bir hata oluştu' });
+        console.error('Dashboard yükleme hatası:', error);
+        res.status(500).send('Bir hata oluştu');
     }
 });
 
 // Sendikacı dashboard sayfası
 app.get('/dashboard/sendikaci', async (req, res) => {
+    if (!req.session.userId || req.session.userType !== 'sendikaci') {
+        return res.redirect('/giris/sendikaci');
+    }
+
     try {
-        if (!req.session.userId || req.session.userType !== 'sendikaci') {
-            return res.redirect('/giris/sendikaci');
-        }
+        // Aktiflik puanını hesapla
+        const aktiflikPuani = await aktiflikPuaniHesapla(req.session.userId);
+        
+        // Sendika ücretini hesapla
+        const ucretBilgisi = await sendikaUcretiHesapla(req.session.userId);
 
         // Sendikacı (rol=2) toplam üye sayısını çek
         const result = await pool.query(
@@ -372,15 +386,17 @@ app.get('/dashboard/sendikaci', async (req, res) => {
         );
         const uyeSayisi = result.rows[0].count;
 
-        // Dashboard sayfasını render et
-        res.render('sendikaci-dashboard', { 
+        res.render('sendikaci-dashboard', {
             user: req.session.user,
             uyeSayisi: uyeSayisi,
-            activeTab: 'dashboard'
+            activeTab: 'dashboard',
+            aktiflikPuani: aktiflikPuani,
+            saatlikMaas: ucretBilgisi.saatlikMaas,
+            ucret: ucretBilgisi.ucret
         });
     } catch (error) {
-        console.error('Dashboard hatası:', error);
-        res.status(500).render('error', { error: 'Bir hata oluştu' });
+        console.error('Dashboard yükleme hatası:', error);
+        res.status(500).send('Bir hata oluştu');
     }
 });
 
@@ -530,6 +546,52 @@ app.post('/bordro-yonetim', upload.single('pdf'), async (req, res) => {
 app.get('/iletisim', (req, res) => {
     res.render('iletisim');
 });
+
+// Sendikacı toplantılar sayfası (liste ve ekleme)
+app.get('/toplantilar', async (req, res) => {
+    if (!req.session.userId || req.session.userType !== 'sendikaci') {
+        return res.redirect('/giris/sendikaci');
+    }
+    const pool = require('./db');
+    // Sadece katılımcı veya oluşturan olduğu toplantılar
+    const userId = req.session.userId;
+    const result = await pool.query(`
+        SELECT * FROM toplantilar 
+        WHERE olusturan_id = $1 OR (katilimcilar IS NOT NULL AND (',' || katilimcilar || ',') LIKE '%,' || $1::text || ',%')
+        ORDER BY tarih DESC, saat DESC`, [userId]);
+    const sendikacilar = await pool.query('SELECT id, ad, soyad FROM users WHERE rol = 2');
+    res.render('sendikaci-toplantilar', { user: req.session.user, toplantilar: result.rows, sendikacilar: sendikacilar.rows });
+});
+
+// Toplantı silme
+app.post('/toplantilar/sil/:id', async (req, res) => {
+    if (!req.session.userId || req.session.userType !== 'sendikaci') {
+        return res.status(403).send('Yetkisiz erişim');
+    }
+    const pool = require('./db');
+    const id = req.params.id;
+    // Sadece oluşturan kişi silebilir
+    await pool.query('DELETE FROM toplantilar WHERE id = $1 AND olusturan_id = $2', [id, req.session.userId]);
+    res.redirect('/toplantilar');
+});
+
+// Toplantı ekleme
+app.post('/toplantilar/ekle', async (req, res) => {
+    if (!req.session.userId || req.session.userType !== 'sendikaci') {
+        return res.status(403).send('Yetkisiz erişim');
+    }
+    const { baslik, tarih, saat, yer, gundem, yapilacaklar, katilimcilar, katilimci } = req.body;
+    const pool = require('./db');
+    // Çoklu seçimden gelen katılımcı id'lerini virgülle birleştir
+    let katilimciStr = Array.isArray(katilimcilar) ? katilimcilar.join(',') : katilimcilar;
+    await pool.query(
+        'INSERT INTO toplantilar (baslik, tarih, saat, yer, gundem, yapilacaklar, olusturan_id, katilimcilar) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)',
+        [baslik, tarih, saat, yer, gundem, yapilacaklar, req.session.userId, katilimciStr]
+    );
+    res.redirect('/toplantilar');
+});
+
+// Toplantı düzenleme (form ve güncelleme işlemi ileride eklenecek)
 
 // API routes
 app.use('/api', require('./routes/api'));
