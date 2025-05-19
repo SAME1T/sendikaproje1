@@ -264,6 +264,202 @@
             color: white;
             border-color: transparent;
         }
+
+        /* Instagram benzeri gönderi kartı */
+        .post-card {
+            background: rgba(255,255,255,0.97);
+            border-radius: 22px;
+            box-shadow: 0 6px 32px 0 rgba(31,38,135,0.13);
+            border: none;
+            margin-bottom: 2.5rem;
+            transition: box-shadow 0.3s, transform 0.3s;
+            overflow: hidden;
+            position: relative;
+            padding: 0 0 0 0;
+        }
+        .post-card:hover {
+            box-shadow: 0 12px 40px 0 rgba(31,38,135,0.22);
+            transform: translateY(-8px) scale(1.015);
+        }
+        .post-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 8px;
+        }
+        .avatar {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #ff6a00, #ee0979);
+            color: #fff;
+            font-weight: 700;
+            font-size: 1.3rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 8px rgba(106,17,203,0.08);
+        }
+        .post-meta {
+            font-size: 0.98rem;
+            color: #888;
+        }
+        .category-badge {
+            background: linear-gradient(90deg, #6a11cb, #2575fc);
+            color: #fff;
+            border-radius: 12px;
+            padding: 2px 12px;
+            font-size: 0.95rem;
+            margin-right: 8px;
+        }
+        .privacy-badge {
+            background: #ffe082;
+            color: #bfa100;
+            border-radius: 10px;
+            padding: 2px 10px;
+            font-size: 0.92rem;
+            margin-left: 6px;
+        }
+        .post-content {
+            font-size: 1.22rem;
+            margin-bottom: 14px;
+            color: #222;
+        }
+        .post-media {
+            margin: 0 -24px 0 -24px;
+            text-align: center;
+        }
+        .post-media img, .post-media video {
+            border-radius: 18px;
+            margin-top: 10px;
+            max-height: 480px;
+            object-fit: contain;
+            width: 100%;
+            max-width: 100%;
+            box-shadow: 0 2px 18px rgba(31,38,135,0.13);
+            cursor: pointer;
+            transition: box-shadow 0.2s, transform 0.2s;
+        }
+        .post-media img:hover, .post-media video:hover {
+            box-shadow: 0 8px 32px rgba(31,38,135,0.22);
+            transform: scale(1.03);
+        }
+        .post-actions {
+            display: flex;
+            align-items: center;
+            gap: 18px;
+            margin-top: 10px;
+        }
+        .begen-btn, .yorum-btn {
+            border-radius: 50%;
+            width: 44px;
+            height: 44px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.3rem;
+            background: #f7f7fa;
+            border: none;
+            transition: background 0.2s, color 0.2s, transform 0.15s;
+            box-shadow: 0 1px 4px rgba(31,38,135,0.07);
+            color: #6a11cb;
+            position: relative;
+        }
+        .begen-btn.active, .begen-btn:active {
+            background: linear-gradient(90deg, #6a11cb, #2575fc);
+            color: #fff;
+            transform: scale(1.18);
+        }
+        .begen-btn:focus { outline: none; }
+        .begen-count, .yorum-count {
+            font-size: 1.05rem;
+            margin-left: 6px;
+            color: #444;
+            font-weight: 600;
+        }
+        .yorumlar-list {
+            margin-top: 10px;
+            margin-bottom: 6px;
+            padding-left: 6px;
+        }
+        .yorum-bubble {
+            background: #f3f6fa;
+            border-radius: 16px;
+            padding: 7px 14px;
+            margin-bottom: 5px;
+            display: inline-block;
+            font-size: 1.01rem;
+            color: #333;
+            box-shadow: 0 1px 3px rgba(31,38,135,0.04);
+            animation: yorumFadeIn 0.5s;
+        }
+        @keyframes yorumFadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: none; }
+        }
+        .yorum-form input {
+            border-radius: 18px;
+            border: 1px solid #e0e0e0;
+            padding-left: 16px;
+        }
+        .yorum-form button {
+            border-radius: 18px;
+            padding: 6px 18px;
+            font-weight: 600;
+        }
+        .container.feed-container {
+            max-width: 900px;
+            margin: auto;
+        }
+        /* Lightbox modal */
+        #mediaModal {
+            display: none;
+            position: fixed;
+            z-index: 9999;
+            left: 0; top: 0; width: 100vw; height: 100vh;
+            background: rgba(0,0,0,0.88);
+            align-items: center;
+            justify-content: center;
+            transition: opacity 0.2s;
+        }
+        #mediaModal.active { display: flex; }
+        #mediaModal .modal-content {
+            max-width: 90vw;
+            max-height: 90vh;
+            border-radius: 18px;
+            box-shadow: 0 8px 40px rgba(0,0,0,0.25);
+            background: #222;
+            padding: 0;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        #mediaModal img, #mediaModal video {
+            max-width: 90vw;
+            max-height: 90vh;
+            border-radius: 18px;
+            background: #222;
+        }
+        #mediaModal .close-modal {
+            position: absolute;
+            top: 18px;
+            right: 28px;
+            color: #fff;
+            font-size: 2.5rem;
+            background: none;
+            border: none;
+            cursor: pointer;
+            z-index: 2;
+            opacity: 0.85;
+            transition: opacity 0.2s;
+        }
+        #mediaModal .close-modal:hover { opacity: 1; }
+        @media (max-width: 700px) {
+            .container.feed-container { max-width: 100vw; padding: 0 2px; }
+            .post-card { border-radius: 0; }
+            #mediaModal .modal-content { border-radius: 0; }
+        }
     </style>
 </head>
 <body>
@@ -283,32 +479,32 @@
                     <i class="fas fa-poll"></i> Anket Yönetimi
                 </a>
             </li>
-                    <li class="nav-item">
+            <li class="nav-item">
                 <a class="nav-link" href="#">
                     <i class="fas fa-gavel"></i> Grev Kararları
                 </a>
-                    </li>
-                    <li class="nav-item">
+            </li>
+            <li class="nav-item">
                 <a class="nav-link" href="/toplantilar">
                     <i class="fas fa-users"></i> Toplantılar
                 </a>
-                    </li>
-                    <li class="nav-item">
+            </li>
+            <li class="nav-item">
                 <a class="nav-link" href="#">
                     <i class="fas fa-bullhorn"></i> Eylem Planları
                 </a>
-                    </li>
-                    <li class="nav-item">
+            </li>
+            <li class="nav-item">
                 <a class="nav-link" href="#">
                     <i class="fas fa-bell"></i> Duyurular
                 </a>
-                    </li>
-                    <li class="nav-item">
+            </li>
+            <li class="nav-item">
                 <a class="nav-link" href="/iletisim">
                     <i class="fas fa-envelope"></i> İletişim
                 </a>
-                    </li>
-                    <li class="nav-item">
+            </li>
+            <li class="nav-item">
                 <a class="nav-link" href="#">
                     <i class="fas fa-calendar-alt"></i> Etkinlikler
                 </a>
@@ -318,16 +514,55 @@
                     <i class="fas fa-file-invoice"></i> Bordro Yönetim
                 </a>
             </li>
-            <li class="nav-item mt-auto">
-                <a class="nav-link" href="/cikis">
-                    <i class="fas fa-sign-out-alt"></i> Çıkış
-                </a>
-                    </li>
-                </ul>
-            </div>
+        </ul>
+    </div>
 
     <!-- Main Content -->
     <div class="main-content">
+        <!-- Kapak ve Profil Alanı -->
+        <div class="mb-4" style="position:relative;">
+            <div style="width:100%; height:180px; border-radius:18px; background:linear-gradient(90deg,#43e97b 0%,#38f9d7 100%); background-size:cover; background-position:center; overflow:hidden; position:relative; <%= user.kapak_foto ? `background-image:url('${user.kapak_foto}')` : '' %>">
+                <!-- Sağ üst buton grubu -->
+                <div class="d-flex align-items-center gap-2" style="position:absolute; top:22px; right:32px; z-index:3;">
+                    <!-- Bildirimler -->
+                    <div class="dropdown">
+                        <button class="btn btn-light shadow-sm position-relative" type="button" id="bildirimlerBtn" data-bs-toggle="dropdown" aria-expanded="false" style="border-radius:50%; width:48px; height:48px; display:flex; align-items:center; justify-content:center; font-size:1.5rem;">
+                            <i class="fas fa-bell"></i>
+                            <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="font-size:0.8rem;">3</span>
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end shadow" aria-labelledby="bildirimlerBtn" style="min-width:320px;">
+                            <li><h6 class="dropdown-header">Bildirimler</h6></li>
+                            <li><a class="dropdown-item" href="#"><i class="fas fa-comment text-primary me-2"></i>Yeni yorum: "Çok güzel paylaşım!"</a></li>
+                            <li><a class="dropdown-item" href="#"><i class="fas fa-heart text-danger me-2"></i>Paylaşımın beğenildi</a></li>
+                            <li><a class="dropdown-item" href="#"><i class="fas fa-user-plus text-success me-2"></i>Yeni takipçi: Ayşe K.</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item text-center text-primary" href="#">Tümünü Gör</a></li>
+                        </ul>
+                    </div>
+                    <!-- Ayarlar -->
+                    <a href="/ayarlar" class="btn btn-light shadow-sm" style="border-radius:50%; width:48px; height:48px; display:flex; align-items:center; justify-content:center; font-size:1.5rem;"><i class="fas fa-cog"></i></a>
+                    <!-- Çıkış -->
+                    <a href="/cikis" class="btn btn-light shadow-sm" style="border-radius:50%; width:48px; height:48px; display:flex; align-items:center; justify-content:center; font-size:1.5rem;"><i class="fas fa-sign-out-alt"></i></a>
+                </div>
+            </div>
+            <div style="position:absolute; left:40px; bottom:-60px; z-index:2;">
+                <% if (user.profil_foto) { %>
+                <div style="width:120px; height:120px; border-radius:50%; background:#fff; box-shadow:0 4px 18px rgba(0,0,0,0.13); display:flex; align-items:center; justify-content:center; font-size:2.8rem; font-weight:700; color:#6a11cb; overflow:hidden; border:4px solid #fff; background-size:cover; background-position:center; background-image:url('<%= user.profil_foto %>');">
+                </div>
+                <% } else { %>
+                <div style="width:120px; height:120px; border-radius:50%; background:linear-gradient(135deg,#ff6a00,#ee0979); color:#fff; display:flex; align-items:center; justify-content:center; font-size:2.8rem; font-weight:700; box-shadow:0 4px 18px rgba(0,0,0,0.13); border:4px solid #fff;">
+                    <%= (user.ad[0] || '').toUpperCase() %><%= (user.soyad[0] || '').toUpperCase() %>
+                </div>
+                <% } %>
+            </div>
+            <div style="position:absolute; left:180px; bottom:-30px; z-index:2;">
+                <div style="font-size:1.5rem; font-weight:700; color:#333;"><%= user.ad %> <%= user.soyad %></div>
+                <span style="display:inline-block; margin-top:6px; padding:5px 18px; border-radius:18px; font-size:1.05rem; font-weight:600; background:linear-gradient(90deg,#43e97b,#38f9d7); color:#222;">
+                    <%= user.rol === 1 ? 'İşçi' : (user.rol === 2 ? 'Sendikacı' : 'Admin') %>
+                </span>
+            </div>
+        </div>
+        <div style="height:70px;"></div>
         <div class="row">
             <div class="col-12 mb-4">
                 <div class="card welcome-card">
@@ -378,6 +613,107 @@
                 </div>
             </div>
         </div>
+
+        <div class="container mb-4 feed-container">
+            <div class="card mb-4">
+                <div class="card-body">
+                    <form action="/paylasim-ekle" method="POST" enctype="multipart/form-data">
+                        <div class="row g-2 align-items-end">
+                            <div class="col-md-3">
+                                <label class="form-label">Kategori</label>
+                                <select name="kategori" class="form-select" required>
+                                    <option value="dilek">Dilek</option>
+                                    <option value="şikayet">Şikayet</option>
+                                    <option value="istek">İstek</option>
+                                    <option value="görüş">Görüş</option>
+                                    <option value="öneri">Öneri</option>
+                                    <option value="teşekkür">Teşekkür</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label">Gizlilik</label>
+                                <select name="gizlilik" class="form-select" id="gizlilik-select" required>
+                                    <option value="herkes">Herkes</option>
+                                    <option value="ozel">Kişiye Özel</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3" id="hedef-kullanici-div" style="display:none;">
+                                <label class="form-label">Hedef Kişi</label>
+                                <select name="hedef_kullanici_id" class="form-select">
+                                    <option value="">Seçiniz</option>
+                                    <% kullanicilar.forEach(function(k) { %>
+                                        <option value="<%= k.id %>"><%= k.ad %> <%= k.soyad %></option>
+                                    <% }); %>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">İçerik</label>
+                                <textarea name="icerik" class="form-control" rows="2" required placeholder="Paylaşmak istediğiniz mesaj..."></textarea>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Fotoğraf/Video</label>
+                                <input type="file" name="media" class="form-control" accept="image/*,video/*">
+                                <small class="text-muted">Maksimum dosya boyutu: 10MB. Desteklenen formatlar: JPG, PNG, GIF, MP4</small>
+                            </div>
+                        </div>
+                        <div class="mt-3 text-end">
+                            <button type="submit" class="btn btn-primary"><i class="fas fa-paper-plane"></i> Paylaş</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            <div class="mb-4"><h5><i class="fas fa-stream"></i> Paylaşım Akışı</h5></div>
+            <% if (typeof paylasimlar !== 'undefined' && paylasimlar.length > 0) { %>
+                <% paylasimlar.forEach(function(p) { %>
+                    <div class="post-card paylasim-card" data-paylasim-id="<%= p.id %>">
+                        <div class="card-body">
+                            <div class="post-header">
+                                <div class="avatar"><%= (p.ad[0] || '').toUpperCase() %><%= (p.soyad[0] || '').toUpperCase() %></div>
+                                <div>
+                                    <span class="post-meta">@<%= p.ad %> <%= p.soyad %></span><br>
+                                    <span class="post-meta"><%= p.created_at.toISOString().slice(0,16).replace('T',' ') %></span>
+                                </div>
+                                <span class="category-badge"><%= p.kategori %></span>
+                                <% if (p.gizlilik === 'ozel') { %>
+                                    <span class="privacy-badge">Gizli</span>
+                                <% } %>
+                                <% if (user.id === p.user_id || user.rol === 2) { %>
+                                    <button class="btn btn-sm btn-danger ms-auto sil-paylasim-btn" title="Sil"><i class="fas fa-trash"></i></button>
+                                <% } %>
+                            </div>
+                            <div class="post-content"> <%= p.icerik %> </div>
+                            <% if (p.media_path) { %>
+                                <div class="post-media">
+                                    <% if (p.media_path.match(/\.(jpg|jpeg|png|gif)$/i)) { %>
+                                        <img src="<%= p.media_path %>" class="img-fluid post-media-img" alt="Paylaşılan görsel">
+                                    <% } else if (p.media_path.match(/\.(mp4|webm|ogg)$/i)) { %>
+                                        <video class="img-fluid post-media-video" controls>
+                                            <source src="<%= p.media_path %>" type="video/mp4">
+                                            Tarayıcınız video oynatmayı desteklemiyor.
+                                        </video>
+                                    <% } %>
+                                </div>
+                            <% } %>
+                            <div class="post-actions">
+                                <button class="begen-btn <%= p.liked_by_user ? 'active' : '' %>" data-liked="<%= p.liked_by_user %>">
+                                    <i class="fa<%= p.liked_by_user ? 's' : 'r' %> fa-heart"></i>
+                                </button>
+                                <span class="begen-count" style="cursor:pointer; text-decoration:underline;" title="Beğenenleri Gör"> <%= p.begeni_count %> </span>
+                                <button class="yorum-btn" disabled><i class="far fa-comment"></i></button>
+                                <span class="yorum-count">0</span>
+                            </div>
+                            <div class="yorumlar-list mt-2"></div>
+                            <form class="yorum-form mt-2 d-flex gap-2">
+                                <input type="text" class="form-control form-control-sm" name="icerik" placeholder="Yorum yaz..." required maxlength="300">
+                                <button type="submit" class="btn btn-sm btn-success">Gönder</button>
+                            </form>
+                        </div>
+                    </div>
+                <% }); %>
+            <% } else { %>
+                <div class="alert alert-secondary">Henüz paylaşım yok.</div>
+            <% } %>
+        </div>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
@@ -408,6 +744,25 @@
                 <button onclick="sendMessage()">
                     <i class="fas fa-paper-plane"></i>
                 </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Lightbox Modal -->
+    <div id="mediaModal">
+        <button class="close-modal" onclick="closeMediaModal()">&times;</button>
+        <div class="modal-content" id="mediaModalContent"></div>
+    </div>
+
+    <!-- Beğenenler Modalı -->
+    <div class="modal fade" id="begenenlerModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Beğenenler</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Kapat"></button>
+                </div>
+                <div class="modal-body" id="begenenlerList"></div>
             </div>
         </div>
     </div>
@@ -463,6 +818,17 @@
                     sendMessage();
                 }
             });
+
+            // Gizlilik seçimine göre hedef kullanıcı alanını göster/gizle
+            var gizlilikSelect = document.getElementById('gizlilik-select');
+            var hedefDiv = document.getElementById('hedef-kullanici-div');
+            gizlilikSelect.addEventListener('change', function() {
+                if (this.value === 'ozel') {
+                    hedefDiv.style.display = '';
+                } else {
+                    hedefDiv.style.display = 'none';
+                }
+            });
         });
 
         // Mesaj gönderme fonksiyonu
@@ -508,6 +874,181 @@
           .then(data => {
             document.getElementById('active-survey-count').innerText = data.count;
           });
+
+        // AJAX ile beğeni ve yorum işlemleri
+        function loadYorumlar(paylasimId, card) {
+            fetch(`/paylasim/${paylasimId}/yorumlar`).then(r=>r.json()).then(data=>{
+                const list = card.querySelector('.yorumlar-list');
+                list.innerHTML = '';
+                if(data.length===0) { list.innerHTML = '<div class="text-muted small">Henüz yorum yok.</div>'; }
+                else {
+                    data.forEach(y=>{
+                        const div = document.createElement('div');
+                        div.className = 'yorum-bubble d-flex align-items-center';
+                        div.innerHTML = `<b>${y.ad} ${y.soyad}:</b> ${y.icerik} <span class='text-muted small ms-2'>${new Date(y.created_at).toLocaleString('tr-TR')}</span>`;
+                        // Yorum beğeni butonu
+                        const likeBtn = document.createElement('button');
+                        likeBtn.className = 'btn btn-sm btn-light ms-2 yorum-begen-btn';
+                        likeBtn.innerHTML = '<i class="far fa-heart"></i> <span class="yorum-begen-count">0</span>';
+                        likeBtn.onclick = function(e){
+                            e.preventDefault();
+                            fetch(`/yorum/${y.id}/begen`, {method:'POST'}).then(r=>r.json()).then(data=>{
+                                const icon = likeBtn.querySelector('i');
+                                let count = parseInt(likeBtn.querySelector('.yorum-begen-count').innerText);
+                                if(data.liked){ icon.className='fas fa-heart text-danger'; count++; likeBtn.animate([{transform:'scale(1.2)'},{transform:'scale(1)'}],{duration:250}); }
+                                else { icon.className='far fa-heart'; count--; }
+                                likeBtn.querySelector('.yorum-begen-count').innerText = count;
+                            });
+                        };
+                        // Yorum beğenenleri göster
+                        likeBtn.querySelector('.yorum-begen-count').onclick = function(e){
+                            e.stopPropagation();
+                            fetch(`/yorum/${y.id}/begenenler`).then(r=>r.json()).then(data=>{
+                                let html = data.length ? data.map(u=>`${u.ad} ${u.soyad}`).join('<br>') : 'Henüz beğeni yok.';
+                                document.getElementById('begenenlerList').innerHTML = html;
+                                new bootstrap.Modal(document.getElementById('begenenlerModal')).show();
+                            });
+                        };
+                        div.appendChild(likeBtn);
+                        // Yorum sil butonu
+                        <% /* Yorumun sahibi veya sendikacı ise sil butonu */ %>
+                        if (y.user_id === <%= user.id %> || <%= user.rol %> === 2) {
+                            const silBtn = document.createElement('button');
+                            silBtn.className = 'btn btn-sm btn-danger ms-2';
+                            silBtn.innerHTML = '<i class="fas fa-trash"></i>';
+                            silBtn.onclick = function(e){
+                                e.preventDefault();
+                                if(confirm('Yorumu silmek istediğinize emin misiniz?')){
+                                    fetch(`/yorum/${y.id}/sil`, {method:'POST'}).then(r=>r.json()).then(data=>{ if(data.success) loadYorumlar(paylasimId, card); });
+                                }
+                            };
+                            div.appendChild(silBtn);
+                        }
+                        list.appendChild(div);
+                        // Yorum beğeni sayısını yükle
+                        fetch(`/yorum/${y.id}/begenenler`).then(r=>r.json()).then(data=>{
+                            likeBtn.querySelector('.yorum-begen-count').innerText = data.length;
+                        });
+                    });
+                }
+                card.querySelector('.yorum-count').innerText = data.length;
+            });
+        }
+        document.querySelectorAll('.paylasim-card').forEach(function(card){
+            const paylasimId = card.getAttribute('data-paylasim-id');
+            loadYorumlar(paylasimId, card);
+            // Paylaşım silme
+            const silBtn = card.querySelector('.sil-paylasim-btn');
+            if(silBtn){
+                silBtn.onclick = function(e){
+                    e.preventDefault();
+                    if(confirm('Paylaşımı silmek istediğinize emin misiniz?')){
+                        fetch(`/paylasim/${paylasimId}/sil`, {method:'POST'}).then(r=>r.json()).then(data=>{ if(data.success) card.remove(); });
+                    }
+                };
+            }
+            // Beğenenleri göster
+            card.querySelector('.begen-count').onclick = function(e){
+                fetch(`/paylasim/${paylasimId}/begenenler`).then(r=>r.json()).then(data=>{
+                    let html = data.length ? data.map(u=>`${u.ad} ${u.soyad}`).join('<br>') : 'Henüz beğeni yok.';
+                    document.getElementById('begenenlerList').innerHTML = html;
+                    new bootstrap.Modal(document.getElementById('begenenlerModal')).show();
+                });
+            };
+            // Beğeni butonu
+            card.querySelector('.begen-btn').onclick = function(e){
+                e.preventDefault();
+                fetch(`/paylasim/${paylasimId}/begen`, {method:'POST'}).then(r=>r.json()).then(data=>{
+                    const btn = card.querySelector('.begen-btn');
+                    const icon = btn.querySelector('i');
+                    let count = parseInt(card.querySelector('.begen-count').innerText);
+                    if(data.liked){ btn.classList.add('active'); icon.className='fas fa-heart'; count++; btn.animate([{transform:'scale(1.2)'},{transform:'scale(1)'}],{duration:250}); }
+                    else { btn.classList.remove('active'); icon.className='far fa-heart'; count--; }
+                    card.querySelector('.begen-count').innerText = count;
+                });
+            };
+            // Yorum formu
+            card.querySelector('.yorum-form').onsubmit = function(e){
+                e.preventDefault();
+                const input = this.querySelector('input[name=icerik]');
+                const val = input.value.trim();
+                if(!val) return;
+                fetch(`/paylasim/${paylasimId}/yorum`, {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({icerik:val})})
+                .then(r=>r.json()).then(data=>{
+                    if(data.success){ input.value=''; loadYorumlar(paylasimId, card); card.querySelector('.yorumlar-list').animate([{background:'#ffe082'},{background:'transparent'}],{duration:400}); }
+                });
+            };
+        });
+
+        // Lightbox modal fonksiyonları
+        function openMediaModal(src, type) {
+            const modal = document.getElementById('mediaModal');
+            const content = document.getElementById('mediaModalContent');
+            content.innerHTML = '';
+            if(type === 'img') {
+                const img = document.createElement('img');
+                img.src = src;
+                img.style.maxWidth = '90vw';
+                img.style.maxHeight = '90vh';
+                content.appendChild(img);
+            } else if(type === 'video') {
+                const video = document.createElement('video');
+                video.src = src;
+                video.controls = true;
+                video.autoplay = true;
+                video.style.maxWidth = '90vw';
+                video.style.maxHeight = '90vh';
+                content.appendChild(video);
+            }
+            modal.classList.add('active');
+        }
+        function closeMediaModal() {
+            document.getElementById('mediaModal').classList.remove('active');
+        }
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.post-media-img').forEach(function(img){
+                img.onclick = function(){ openMediaModal(this.src, 'img'); };
+            });
+            document.querySelectorAll('.post-media-video').forEach(function(vid){
+                vid.onclick = function(){ openMediaModal(this.querySelector('source').src, 'video'); };
+            });
+            document.getElementById('mediaModal').onclick = function(e){
+                if(e.target === this) closeMediaModal();
+            };
+        });
+
+        // Bildirimler açılır menüsünü AJAX ile doldur
+        function loadBildirimler() {
+            fetch('/api/bildirimler')
+                .then(r => r.json())
+                .then(data => {
+                    const menu = document.querySelector('#bildirimlerBtn + .dropdown-menu');
+                    menu.innerHTML = '';
+                    if (!data.length) {
+                        menu.innerHTML = '<li><span class="dropdown-item text-muted">Hiç bildiriminiz yok.</span></li>';
+                        return;
+                    }
+                    menu.innerHTML += '<li><h6 class="dropdown-header">Bildirimler</h6></li>';
+                    data.forEach(b => {
+                        let icon = b.tip === 'yorum' ? '<i class="fas fa-comment text-primary me-2"></i>' : '<i class="fas fa-heart text-danger me-2"></i>';
+                        let text = b.tip === 'yorum'
+                            ? `${icon}<b>${b.bildiren_ad} ${b.bildiren_soyad}</b> gönderine yorum yaptı: <span class="text-dark">"${b.yorum_icerik}"</span>`
+                            : `${icon}<b>${b.bildiren_ad} ${b.bildiren_soyad}</b> gönderini beğendi.`;
+                        menu.innerHTML += `<li><a class="dropdown-item bildirim-link" href="#paylasim-${b.paylasim_id}">${text}<br><small class='text-muted'>${new Date(b.tarih).toLocaleString('tr-TR')}</small></a></li>`;
+                    });
+                    menu.innerHTML += '<li><hr class="dropdown-divider"></li>';
+                    menu.innerHTML += '<li><a class="dropdown-item text-center text-primary" href="#">Tümünü Gör</a></li>';
+                });
+        }
+        document.getElementById('bildirimlerBtn').addEventListener('click', loadBildirimler);
+        // Bildirime tıklanınca ilgili postun olduğu yere git
+        // (Eğer başka bir sayfadaysa yönlendirme yapılabilir, burada anchor scroll)
+        document.addEventListener('click', function(e) {
+            if (e.target.classList.contains('bildirim-link')) {
+                // Menü kapansın
+                setTimeout(() => document.body.click(), 100);
+            }
+        });
     </script>
 </body>
 </html> 

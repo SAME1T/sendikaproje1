@@ -17,7 +17,10 @@ const Payroll = db.Payroll;
 const multer = require('multer');
 const fs = require('fs');
 const uploadDir = path.join(__dirname, 'public/uploads/payrolls');
+const mediaUploadDir = path.join(__dirname, 'public/uploads/media');
 if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
+if (!fs.existsSync(mediaUploadDir)) fs.mkdirSync(mediaUploadDir, { recursive: true });
+
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
     cb(null, uploadDir);
@@ -27,12 +30,39 @@ const storage = multer.diskStorage({
     cb(null, uniqueSuffix + '-' + file.originalname);
   }
 });
+
+const mediaStorage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, mediaUploadDir);
+  },
+  filename: function (req, file, cb) {
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    cb(null, uniqueSuffix + '-' + file.originalname);
+  }
+});
+
 const upload = multer({ storage: storage, fileFilter: (req, file, cb) => {
   if (file.mimetype !== 'application/pdf') {
     return cb(new Error('Sadece PDF dosyası yükleyebilirsiniz!'));
   }
   cb(null, true);
 }});
+
+const mediaUpload = multer({ 
+  storage: mediaStorage,
+  fileFilter: (req, file, cb) => {
+    // Sadece resim ve video dosyalarına izin ver
+    if (file.mimetype.startsWith('image/') || file.mimetype.startsWith('video/')) {
+      cb(null, true);
+    } else {
+      cb(new Error('Sadece resim ve video dosyaları yükleyebilirsiniz!'));
+    }
+  },
+  limits: {
+    fileSize: 10 * 1024 * 1024 // 10MB limit
+  }
+});
+
 const { aktiflikPuaniHesapla, sendikaUcretiHesapla } = require('./utils/aktiflikHesaplama');
 
 const app = express();
@@ -344,22 +374,25 @@ app.get('/dashboard/isci', async (req, res) => {
     try {
         // Aktiflik puanını hesapla
         const aktiflikPuani = await aktiflikPuaniHesapla(req.session.userId);
-        
         // Sendika ücretini hesapla
         const ucretBilgisi = await sendikaUcretiHesapla(req.session.userId);
-
         // Toplam üye sayısını çek (rol=1 olanlar)
         const result = await pool.query(
             'SELECT COUNT(*) as count FROM users WHERE rol = 1'
         );
         const uyeSayisi = result.rows[0].count;
-
+        // Tüm sendikacıları çek (kişiye özel paylaşım için)
+        const sendikacilar = await pool.query('SELECT id, ad, soyad FROM users WHERE rol = 2');
+        // Paylaşımları çek
+        const paylasimlar = await getPaylasimlarForUser(req.session.userId);
         res.render('isci-dashboard', {
             user: req.session.user,
             aktiflikPuani: aktiflikPuani,
             saatlikMaas: ucretBilgisi.saatlikMaas,
             ucret: ucretBilgisi.ucret,
-            uyeSayisi: uyeSayisi
+            uyeSayisi: uyeSayisi,
+            kullanicilar: sendikacilar.rows, // kişiye özel paylaşım için
+            paylasimlar: paylasimlar // paylaşım akışı
         });
     } catch (error) {
         console.error('Dashboard yükleme hatası:', error);
@@ -376,23 +409,28 @@ app.get('/dashboard/sendikaci', async (req, res) => {
     try {
         // Aktiflik puanını hesapla
         const aktiflikPuani = await aktiflikPuaniHesapla(req.session.userId);
-        
         // Sendika ücretini hesapla
         const ucretBilgisi = await sendikaUcretiHesapla(req.session.userId);
-
         // Sendikacı (rol=2) toplam üye sayısını çek
         const result = await pool.query(
             'SELECT COUNT(*) as count FROM users WHERE rol = 2'
         );
         const uyeSayisi = result.rows[0].count;
-
+        // Tüm işçileri ve sendikacıları çek (kişiye özel paylaşım için)
+        const isciler = await pool.query('SELECT id, ad, soyad FROM users WHERE rol = 1');
+        const sendikacilar = await pool.query('SELECT id, ad, soyad FROM users WHERE rol = 2');
+        const kullanicilar = isciler.rows.concat(sendikacilar.rows);
+        // Paylaşımları çek
+        const paylasimlar = await getPaylasimlarForUser(req.session.userId);
         res.render('sendikaci-dashboard', {
             user: req.session.user,
             uyeSayisi: uyeSayisi,
             activeTab: 'dashboard',
             aktiflikPuani: aktiflikPuani,
             saatlikMaas: ucretBilgisi.saatlikMaas,
-            ucret: ucretBilgisi.ucret
+            ucret: ucretBilgisi.ucret,
+            kullanicilar: kullanicilar, // kişiye özel paylaşım için
+            paylasimlar: paylasimlar // paylaşım akışı
         });
     } catch (error) {
         console.error('Dashboard yükleme hatası:', error);
@@ -593,6 +631,176 @@ app.post('/toplantilar/ekle', async (req, res) => {
 
 // Toplantı düzenleme (form ve güncelleme işlemi ileride eklenecek)
 
+// Paylaşım ekleme (işçi ve sendikacı)
+app.post('/paylasim-ekle', mediaUpload.single('media'), async (req, res) => {
+    if (!req.session.userId) return res.status(403).send('Yetkisiz erişim');
+    
+    const { kategori, icerik, gizlilik, hedef_kullanici_id } = req.body;
+    let media_path = null;
+    
+    if (req.file) {
+        media_path = '/uploads/media/' + req.file.filename;
+    }
+    
+    const pool = require('./db');
+    await pool.query(
+        'INSERT INTO paylasimlar (user_id, kategori, icerik, gizlilik, hedef_kullanici_id, media_path) VALUES ($1, $2, $3, $4, $5, $6)',
+        [req.session.userId, kategori, icerik, gizlilik, hedef_kullanici_id || null, media_path]
+    );
+    res.redirect(req.headers.referer || '/');
+});
+
+// Beğeni ekle/kaldır (toggle)
+app.post('/paylasim/:id/begen', async (req, res) => {
+    if (!req.session.userId) return res.status(403).send('Yetkisiz erişim');
+    const paylasim_id = req.params.id;
+    const user_id = req.session.userId;
+    const pool = require('./db');
+    try {
+        // Beğeni var mı kontrol et
+        const result = await pool.query('SELECT * FROM begeniler WHERE paylasim_id = $1 AND user_id = $2', [paylasim_id, user_id]);
+        if (result.rows.length > 0) {
+            // Varsa kaldır
+            await pool.query('DELETE FROM begeniler WHERE paylasim_id = $1 AND user_id = $2', [paylasim_id, user_id]);
+            return res.json({ liked: false });
+        } else {
+            // Yoksa ekle
+            await pool.query('INSERT INTO begeniler (paylasim_id, user_id) VALUES ($1, $2)', [paylasim_id, user_id]);
+            return res.json({ liked: true });
+        }
+    } catch (error) {
+        console.error('Beğeni ekleme/kaldırma hatası:', error);
+        res.status(500).json({ error: 'Beğeni işlemi sırasında hata oluştu' });
+    }
+});
+
+// Bir paylaşımın beğeni sayısı ve kullanıcının beğenip beğenmediği
+async function getBegenilerForPaylasim(paylasim_id, user_id) {
+    const pool = require('./db');
+    const countResult = await pool.query('SELECT COUNT(*) FROM begeniler WHERE paylasim_id = $1', [paylasim_id]);
+    const userResult = await pool.query('SELECT 1 FROM begeniler WHERE paylasim_id = $1 AND user_id = $2', [paylasim_id, user_id]);
+    return {
+        count: parseInt(countResult.rows[0].count, 10),
+        liked: userResult.rows.length > 0
+    };
+}
+
+// Paylaşım akışı (işçi ve sendikacı dashboardunda kullanılacak)
+async function getPaylasimlarForUser(userId) {
+    const pool = require('./db');
+    // Kullanıcıya açık olan paylaşımlar: gizlilik 'herkes' olanlar veya hedef_kullanici_id bu kullanıcı olanlar veya kendi paylaşımları
+    const result = await pool.query(
+        `SELECT p.*, u.ad, u.soyad, u.rol FROM paylasimlar p
+         JOIN users u ON u.id = p.user_id
+         WHERE p.gizlilik = 'herkes' OR p.hedef_kullanici_id = $1 OR p.user_id = $1
+         ORDER BY p.created_at DESC`,
+        [userId]
+    );
+    // Her paylaşım için beğeni sayısı ve kullanıcının beğenip beğenmediği
+    const paylasimlar = await Promise.all(result.rows.map(async (p) => {
+        const begeni = await getBegenilerForPaylasim(p.id, userId);
+        return { ...p, begeni_count: begeni.count, liked_by_user: begeni.liked };
+    }));
+    return paylasimlar;
+}
+
+// Yorum ekle
+app.post('/paylasim/:id/yorum', async (req, res) => {
+    if (!req.session.userId) return res.status(403).json({ error: 'Yetkisiz erişim' });
+    const paylasim_id = req.params.id;
+    const user_id = req.session.userId;
+    const { icerik } = req.body;
+    const pool = require('./db');
+    try {
+        await pool.query('INSERT INTO yorumlar (paylasim_id, user_id, icerik) VALUES ($1, $2, $3)', [paylasim_id, user_id, icerik]);
+        res.json({ success: true });
+    } catch (error) {
+        console.error('Yorum ekleme hatası:', error);
+        res.status(500).json({ error: 'Yorum eklenirken hata oluştu' });
+    }
+});
+
+// Bir paylaşımın yorumlarını getir
+app.get('/paylasim/:id/yorumlar', async (req, res) => {
+    const paylasim_id = req.params.id;
+    const pool = require('./db');
+    try {
+        const result = await pool.query(
+            `SELECT y.*, u.ad, u.soyad FROM yorumlar y JOIN users u ON u.id = y.user_id WHERE y.paylasim_id = $1 ORDER BY y.created_at ASC`,
+            [paylasim_id]
+        );
+        res.json(result.rows);
+    } catch (error) {
+        console.error('Yorumları çekme hatası:', error);
+        res.status(500).json({ error: 'Yorumlar çekilirken hata oluştu' });
+    }
+});
+
+// PAYLAŞIM SİLME
+app.post('/paylasim/:id/sil', async (req, res) => {
+    if (!req.session.userId) return res.status(403).json({ error: 'Yetkisiz erişim' });
+    const paylasim_id = req.params.id;
+    const user_id = req.session.userId;
+    const pool = require('./db');
+    // Sadece paylaşımı yapan veya sendikacı ise silebilir
+    const result = await pool.query('SELECT * FROM paylasimlar WHERE id = $1', [paylasim_id]);
+    if (!result.rows.length) return res.status(404).json({ error: 'Paylaşım bulunamadı' });
+    const paylasim = result.rows[0];
+    if (paylasim.user_id !== user_id && req.session.userType !== 'sendikaci') {
+        return res.status(403).json({ error: 'Sadece kendi paylaşımınızı silebilirsiniz.' });
+    }
+    await pool.query('DELETE FROM paylasimlar WHERE id = $1', [paylasim_id]);
+    res.json({ success: true });
+});
+
+// YORUM SİLME
+app.post('/yorum/:id/sil', async (req, res) => {
+    if (!req.session.userId) return res.status(403).json({ error: 'Yetkisiz erişim' });
+    const yorum_id = req.params.id;
+    const user_id = req.session.userId;
+    const pool = require('./db');
+    const result = await pool.query('SELECT * FROM yorumlar WHERE id = $1', [yorum_id]);
+    if (!result.rows.length) return res.status(404).json({ error: 'Yorum bulunamadı' });
+    const yorum = result.rows[0];
+    if (yorum.user_id !== user_id && req.session.userType !== 'sendikaci') {
+        return res.status(403).json({ error: 'Sadece kendi yorumunuzu silebilirsiniz.' });
+    }
+    await pool.query('DELETE FROM yorumlar WHERE id = $1', [yorum_id]);
+    res.json({ success: true });
+});
+
+// YORUM BEĞENME (TOGGLE)
+app.post('/yorum/:id/begen', async (req, res) => {
+    if (!req.session.userId) return res.status(403).json({ error: 'Yetkisiz erişim' });
+    const yorum_id = req.params.id;
+    const user_id = req.session.userId;
+    const pool = require('./db');
+    const result = await pool.query('SELECT * FROM yorum_begeniler WHERE yorum_id = $1 AND user_id = $2', [yorum_id, user_id]);
+    if (result.rows.length > 0) {
+        await pool.query('DELETE FROM yorum_begeniler WHERE yorum_id = $1 AND user_id = $2', [yorum_id, user_id]);
+        return res.json({ liked: false });
+    } else {
+        await pool.query('INSERT INTO yorum_begeniler (yorum_id, user_id) VALUES ($1, $2)', [yorum_id, user_id]);
+        return res.json({ liked: true });
+    }
+});
+
+// PAYLAŞIMI BEĞENENLERİ GETİR
+app.get('/paylasim/:id/begenenler', async (req, res) => {
+    const paylasim_id = req.params.id;
+    const pool = require('./db');
+    const result = await pool.query('SELECT u.ad, u.soyad FROM begeniler b JOIN users u ON u.id = b.user_id WHERE b.paylasim_id = $1', [paylasim_id]);
+    res.json(result.rows);
+});
+
+// YORUMU BEĞENENLERİ GETİR
+app.get('/yorum/:id/begenenler', async (req, res) => {
+    const yorum_id = req.params.id;
+    const pool = require('./db');
+    const result = await pool.query('SELECT u.ad, u.soyad FROM yorum_begeniler yb JOIN users u ON u.id = yb.user_id WHERE yb.yorum_id = $1', [yorum_id]);
+    res.json(result.rows);
+});
+
 // API routes
 app.use('/api', require('./routes/api'));
 
@@ -610,4 +818,35 @@ app.use('/api', require('./routes/api'));
 const PORT = apiConfig.apiPort;
 app.listen(PORT, () => {
   console.log(`API Sunucusu port ${PORT} üzerinde çalışıyor`);
+});
+
+// Ayarlar/profil düzenleme sayfası (GET)
+app.get('/ayarlar', async (req, res) => {
+    if (!req.session.userId) return res.redirect('/');
+    const pool = require('./db');
+    const result = await pool.query('SELECT id, ad, soyad, email, telefon FROM users WHERE id = $1', [req.session.userId]);
+    if (!result.rows.length) return res.redirect('/');
+    res.render('ayarlar', { user: result.rows[0], mesaj: null, hata: null });
+});
+
+// Ayarlar/profil düzenleme (POST)
+app.post('/ayarlar', async (req, res) => {
+    if (!req.session.userId) return res.redirect('/');
+    const { ad, soyad, email, telefon, sifre, sifre_tekrar } = req.body;
+    const pool = require('./db');
+    let hata = null, mesaj = null;
+    if (sifre && sifre !== sifre_tekrar) {
+        hata = 'Şifreler eşleşmiyor!';
+    } else {
+        try {
+            await pool.query('UPDATE users SET ad=$1, soyad=$2, email=$3, telefon=$4' + (sifre ? ', password=$5' : '') + ' WHERE id=$6',
+                sifre ? [ad, soyad, email, telefon, sifre, req.session.userId] : [ad, soyad, email, telefon, req.session.userId]);
+            mesaj = 'Profiliniz başarıyla güncellendi.';
+        } catch (e) {
+            hata = 'Bir hata oluştu.';
+        }
+    }
+    // Güncel bilgileri tekrar çek
+    const result = await pool.query('SELECT id, ad, soyad, email, telefon FROM users WHERE id = $1', [req.session.userId]);
+    res.render('ayarlar', { user: result.rows[0], mesaj, hata });
 }); 
