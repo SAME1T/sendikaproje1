@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sendika İletişim Rehberi | Türkiye'nin Sendikaları</title>
+    <link rel="stylesheet" href="/all.min.css">
+    <link rel="stylesheet" href="/bootstrap.min.css">
+    <style>
+        body {
+            min-height: 100vh;
+            background: linear-gradient(135deg, #d1d8ff 0%, #e6eaf7 60%, #c5d1f7 100%);
+            position: relative;
+            overflow-x: hidden;
+        }
+        body::before {
+            content: '';
+            position: fixed;
+            top: -120px; left: -120px;
+            width: 400px; height: 400px;
+            background: radial-gradient(circle at 30% 30%, #6a11cb44 0%, transparent 80%);
+            z-index: 0;
+            animation: float1 12s ease-in-out infinite alternate;
+        }
+        body::after {
+            content: '';
+            position: fixed;
+            bottom: -120px; right: -120px;
+            width: 400px; height: 400px;
+            background: radial-gradient(circle at 70% 70%, #2575fc44 0%, transparent 80%);
+            z-index: 0;
+            animation: float2 14s ease-in-out infinite alternate;
+        }
+        @keyframes float1 {
+            0% { transform: translateY(0) scale(1); }
+            100% { transform: translateY(40px) scale(1.08); }
+        }
+        @keyframes float2 {
+            0% { transform: translateY(0) scale(1); }
+            100% { transform: translateY(-40px) scale(1.05); }
+        }
+        .container-custom {
+            max-width: 900px;
+            margin: 40px auto;
+            background: #fff;
+            border-radius: 22px;
+            box-shadow: 0 8px 40px 0 rgba(31,38,135,0.13);
+            padding: 38px 18px 32px 18px;
+            position: relative;
+            z-index: 1;
+        }
+        .page-title {
+            font-size: 2.3rem;
+            font-weight: 800;
+            color: #2575fc;
+            margin-bottom: 0.5rem;
+            letter-spacing: -1px;
+            text-align: center;
+            background: linear-gradient(90deg, #2575fc 0%, #6a11cb 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .page-desc {
+            text-align: center;
+            color: #555;
+            font-size: 1.15rem;
+            margin-bottom: 2.2rem;
+        }
+        .icon-circle {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 70px;
+            height: 70px;
+            margin: 0 auto 18px auto;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #2575fc 0%, #6a11cb 100%);
+            box-shadow: 0 4px 18px rgba(37,117,252,0.13);
+        }
+        .icon-circle i {
+            color: #fff;
+            font-size: 2.2rem;
+        }
+        .sendika-card {
+            border: none;
+            margin-bottom: 28px;
+            border-radius: 16px;
+            background: linear-gradient(120deg, #f8faff 80%, #e9f0fb 100%);
+            box-shadow: 0 2px 16px 0 rgba(37,117,252,0.07);
+            padding: 22px 28px 18px 28px;
+            transition: box-shadow 0.3s, transform 0.2s;
+            position: relative;
+        }
+        .sendika-card:hover {
+            box-shadow: 0 8px 32px 0 rgba(37,117,252,0.13);
+            transform: translateY(-3px) scale(1.02);
+        }
+        .sendika-title {
+            color: #6a11cb;
+            font-size: 1.25rem;
+            font-weight: 700;
+            margin-bottom: 8px;
+            letter-spacing: -0.5px;
+        }
+        .sendika-card p {
+            margin: 2px 0 0 0;
+            font-size: 1.05rem;
+        }
+        .sendika-card a {
+            color: #2575fc;
+            text-decoration: underline;
+            word-break: break-all;
+        }
+        .map-btn {
+            margin-top: 10px;
+            background: linear-gradient(90deg, #2575fc 0%, #6a11cb 100%);
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            padding: 7px 18px;
+            font-weight: 600;
+            font-size: 1rem;
+            transition: background 0.2s, box-shadow 0.2s;
+            box-shadow: 0 2px 8px rgba(37,117,252,0.08);
+        }
+        .map-btn:hover {
+            background: linear-gradient(90deg, #6a11cb 0%, #2575fc 100%);
+            box-shadow: 0 4px 16px rgba(37,117,252,0.13);
+        }
+        .map-iframe {
+            width: 100%;
+            height: 320px;
+            border: none;
+            border-radius: 12px;
+            margin-top: 16px;
+            box-shadow: 0 2px 12px rgba(37,117,252,0.10);
+            display: none;
+            animation: fadeInMap 0.5s;
+        }
+        @keyframes fadeInMap {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        @media (max-width: 700px) {
+            .container-custom { padding: 10px; }
+            .sendika-card { padding: 16px 10px; }
+            .page-title { font-size: 1.4rem; }
+            .map-iframe { height: 200px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container-custom">
+        <div class="icon-circle mb-2">
+            <i class="fas fa-address-book"></i>
+        </div>
+        <div class="page-title">Sendika İletişim Rehberi</div>
+        <div class="page-desc">Türkiye'deki önde gelen sendikaların güncel iletişim, adres ve web sitesi bilgilerine ve harita konumlarına buradan ulaşabilirsiniz.</div>
+        <div class="sendika-card">
+            <div class="sendika-title">TÜRK-İŞ (Türkiye İşçi Sendikaları Konfederasyonu)</div>
+            <p><b>Adres:</b> Bayındır sok.No:10 Kızılay / Ankara | 06410</p>
+            <p><b>Telefon:</b> 0312 433 31 25 (pbx)</p>
+            <p><b>E-Posta:</b> turkis@turkis.org.tr</p>
+            <p><b>Web:</b> <a href="https://www.turkis.org.tr/" target="_blank">turkis.org.tr</a></p>
+            <button class="map-btn" onclick="showMap('turkis', this)">Haritada Göster</button>
+            <iframe id="map-turkis" class="map-iframe" src="https://www.google.com/maps?q=Bay%C4%B1nd%C4%B1r+Sokak+No:10+K%C4%B1z%C4%B1lay+Ankara&output=embed"></iframe>
+        </div>
+        <div class="sendika-card">
+            <div class="sendika-title">MEMUR-SEN (Memur Sendikaları Konfederasyonu)</div>
+            <p><b>Adres:</b> Zübeyde Hanım Mh. Sebze Bahçeleri Cd. No:86, 06400 Altındağ/Ankara</p>
+            <p><b>Telefon:</b> +90 312 230 09 72-73</p>
+            <p><b>Web:</b> <a href="https://www.memursen.org.tr/" target="_blank">memursen.org.tr</a></p>
+            <button class="map-btn" onclick="showMap('memursen', this)">Haritada Göster</button>
+            <iframe id="map-memursen" class="map-iframe" src="https://www.google.com/maps?q=Zübeyde+Hanım+Mahallesi+Sebze+Bahçeleri+Cd+86+Altındağ+Ankara&output=embed"></iframe>
+        </div>
+        <div class="sendika-card">
+            <div class="sendika-title">EĞİTİM-BİR-SEN</div>
+            <p><b>Adres:</b> Zübeyde Hanım Mh. Sebze Bahçeleri Cd. No:86 Kat:14-16 06400 Altındağ/Ankara</p>
+            <p><b>Telefon:</b> 0.312.231 23 06</p>
+            <p><b>Web:</b> <a href="https://www.ebs.org.tr/" target="_blank">ebs.org.tr</a></p>
+            <button class="map-btn" onclick="showMap('ebs', this)">Haritada Göster</button>
+            <iframe id="map-ebs" class="map-iframe" src="https://www.google.com/maps?q=Zübeyde+Hanım+Mahallesi+Sebze+Bahçeleri+Cd+86+Altındağ+Ankara&output=embed"></iframe>
+        </div>
+        <div class="sendika-card">
+            <div class="sendika-title">SAĞLIK-SEN</div>
+            <p><b>Adres:</b> Zübeyde Hanım Mh. Sebze Bahçeleri Cd. No:86 Kat:11-13, 06400 Altındağ/Ankara</p>
+            <p><b>Telefon:</b> 444 1995</p>
+            <p><b>Web:</b> <a href="https://www.sagliksen.org.tr/" target="_blank">sagliksen.org.tr</a></p>
+            <button class="map-btn" onclick="showMap('sagliksen', this)">Haritada Göster</button>
+            <iframe id="map-sagliksen" class="map-iframe" src="https://www.google.com/maps?q=Zübeyde+Hanım+Mahallesi+Sebze+Bahçeleri+Cd+86+Altındağ+Ankara&output=embed"></iframe>
+        </div>
+        <div class="sendika-card">
+            <div class="sendika-title">DİYANET-SEN</div>
+            <p><b>Adres:</b> Rüzgarlı Sokak 15/B Ulus / ANKARA</p>
+            <p><b>Telefon:</b> 0.312 230 46 86 - 0.312 231 57 22</p>
+            <p><b>Web:</b> <a href="https://www.diyanetsen.org.tr/" target="_blank">diyanetsen.org.tr</a></p>
+            <button class="map-btn" onclick="showMap('diyanetsen', this)">Haritada Göster</button>
+            <iframe id="map-diyanetsen" class="map-iframe" src="https://www.google.com/maps?q=Rüzgarlı+Sokak+15/B+Ulus+Ankara&output=embed"></iframe>
+        </div>
+        <div class="sendika-card">
+            <div class="sendika-title">TÜRK METAL SENDİKASI</div>
+            <p><b>Adres:</b> GMK Bulvarı No: 128 Maltepe/ANKARA</p>
+            <p><b>Telefon:</b> 0 312 232 00 60</p>
+            <p><b>Web:</b> <a href="https://www.turkmetal.org.tr/" target="_blank">turkmetal.org.tr</a></p>
+            <button class="map-btn" onclick="showMap('turkmetal', this)">Haritada Göster</button>
+            <iframe id="map-turkmetal" class="map-iframe" src="https://www.google.com/maps?q=GMK+Bulvarı+No:128+Maltepe+Ankara&output=embed"></iframe>
+        </div>
+        <div class="sendika-card">
+            <div class="sendika-title">TEKGIDA-İŞ SENDİKASI</div>
+            <p><b>Adres:</b> Konaklar Mah. Faruk Nafiz Çamlıbel Sok.No:5 / 4. Levent / İSTANBUL</p>
+            <p><b>Telefon:</b> 0535 973 63 17 - 0535 973 60 86</p>
+            <p><b>Web:</b> <a href="https://www.tekgida.org.tr/" target="_blank">tekgida.org.tr</a></p>
+            <button class="map-btn" onclick="showMap('tekgida', this)">Haritada Göster</button>
+            <iframe id="map-tekgida" class="map-iframe" src="https://www.google.com/maps?q=Konaklar+Mah.+Faruk+Nafiz+Çamlıbel+Sok.No:5+Levent+İstanbul&output=embed"></iframe>
+        </div>
+        <p class="mt-4 text-muted text-center">Daha fazla sendika ve iletişim bilgisi için ilgili sendikanın resmi web sitesini ziyaret edebilirsiniz.</p>
+    </div>
+    <script>
+        function showMap(id, btn) {
+            var map = document.getElementById('map-' + id);
+            
+            // Eğer harita zaten açıksa
+            if (map.style.display === 'block') {
+                map.style.display = 'none';
+                btn.textContent = 'Haritada Göster';
+                return;
+            }
+            
+            // Tüm haritaları ve butonları sıfırla
+            document.querySelectorAll('.map-iframe').forEach(function(iframe) {
+                iframe.style.display = 'none';
+            });
+            document.querySelectorAll('.map-btn').forEach(function(b) {
+                b.textContent = 'Haritada Göster';
+            });
+            
+            // Seçili haritayı göster
+            map.style.display = 'block';
+            btn.textContent = 'Haritayı Kapat';
+            map.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+    </script>
+</body>
+</html> 

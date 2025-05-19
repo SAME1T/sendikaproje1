@@ -103,7 +103,7 @@ app.post('/isci-giris', async (req, res) => {
     const { tc, sifre } = req.body;
     try {
         const result = await pool.query(
-            'SELECT * FROM users WHERE tc = $1 AND sifre = $2 AND rol = 1',
+            'SELECT * FROM users WHERE tc_no = $1 AND password = $2 AND rol = 1',
             [tc, sifre]
         );
         
@@ -128,7 +128,7 @@ app.post('/sendikaci-giris', async (req, res) => {
     const { tc, sifre } = req.body;
     try {
         const result = await pool.query(
-            'SELECT * FROM users WHERE tc = $1 AND sifre = $2 AND rol = 2',
+            'SELECT * FROM users WHERE tc_no = $1 AND password = $2 AND rol = 2',
             [tc, sifre]
         );
         
@@ -394,7 +394,7 @@ app.post('/uye-ol', async (req, res) => {
     try {
         const { tcno, ad, soyad, telefon, email, sifre, userType } = req.body;
         // TC ve e-posta kontrolü
-        const existingUser = await pool.query('SELECT * FROM users WHERE tc = $1 OR email = $2', [tcno, email]);
+        const existingUser = await pool.query('SELECT * FROM users WHERE tc_no = $1 OR email = $2', [tcno, email]);
         if (existingUser.rows.length > 0) {
             return res.status(400).json({ error: 'Bu TC kimlik numarası veya e-posta zaten kayıtlı!' });
         }
@@ -402,7 +402,7 @@ app.post('/uye-ol', async (req, res) => {
         const rol = userType === 'isci' ? 1 : 2;
         // Yeni kullanıcıyı ekle
         await pool.query(
-            'INSERT INTO users (tc, ad, soyad, telefon, email, sifre, rol) VALUES ($1, $2, $3, $4, $5, $6, $7)',
+            'INSERT INTO users (tc_no, ad, soyad, telefon, email, password, rol) VALUES ($1, $2, $3, $4, $5, $6, $7)',
             [tcno, ad, soyad, telefon, email, sifre, rol]
         );
         // Başarılı kayıt sonrası ilgili giriş sayfasına yönlendir
@@ -468,7 +468,7 @@ app.get('/bordro-yonetim', async (req, res) => {
         return res.redirect('/giris/sendikaci');
     }
     // Tüm işçileri users tablosundan çek
-    const isciler = await pool.query('SELECT id, ad, soyad, tc FROM users WHERE rol = 1');
+    const isciler = await pool.query('SELECT id, ad, soyad, tc_no FROM users WHERE rol = 1');
     const payrolls = await db.Payroll.findAll({ order: [['created_at', 'DESC']] });
     // Toplam bordro sayısı
     const toplamBordro = payrolls.length;
@@ -523,7 +523,12 @@ app.post('/bordro-yonetim', upload.single('pdf'), async (req, res) => {
   } catch (error) {
     console.error(error);
     res.redirect('/bordro-yonetim');
-  }
+    }
+});
+
+// İletişim sayfası
+app.get('/iletisim', (req, res) => {
+    res.render('iletisim');
 });
 
 // API routes
