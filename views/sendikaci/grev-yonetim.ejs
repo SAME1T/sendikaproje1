@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Grev Yönetimi</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(120deg, #e0eafc 0%, #cfdef3 100%);
+            font-family: 'Segoe UI', 'Roboto', Arial, sans-serif;
+        }
+        .grev-card {
+            transition: box-shadow 0.3s;
+            border: 1px solid #e3e6ed;
+            box-shadow: 0 2px 12px rgba(44,62,80,0.07);
+            border-radius: 18px;
+            background: #fff;
+        }
+        .grev-card:hover {
+            box-shadow: 0 6px 24px rgba(44,62,80,0.13);
+        }
+        .status-badge {
+            padding: 7px 18px;
+            border-radius: 18px;
+            font-weight: 600;
+            font-size: 1rem;
+            letter-spacing: 0.5px;
+        }
+        .status-planned { background: #f7e7b7; color: #7c6f2a; }
+        .status-approved { background: #d1f2eb; color: #117864; }
+        .status-ongoing { background: #d6eaff; color: #1b4f72; }
+        .status-finished { background: #f0f3f4; color: #626567; }
+        .status-onaylandi { background: #eafaf1; color: #229954; }
+        .status-reddedildi { background: #fdecea; color: #c0392b; }
+        .status-bekleme { background: #f9e79f; color: #b9770e; }
+        .btn-primary, .btn-success, .btn-danger {
+            font-weight: 600;
+            border-radius: 8px;
+            letter-spacing: 0.5px;
+        }
+        .table thead th {
+            background: #f8f9fa;
+            color: #2c3e50;
+            font-weight: 700;
+            border-bottom: 2px solid #dee2e6;
+        }
+        .table-striped > tbody > tr:nth-of-type(odd) {
+            background-color: #f7fafd;
+        }
+        .card-header {
+            font-size: 1.2rem;
+            font-weight: 700;
+            background: #2c3e50 !important;
+            color: #fff !important;
+            border-radius: 18px 18px 0 0;
+        }
+        .modal-content {
+            border-radius: 18px;
+        }
+        .modal-header {
+            background: #f8f9fa;
+            border-radius: 18px 18px 0 0;
+        }
+        .modal-title {
+            font-weight: 700;
+            color: #2c3e50;
+        }
+        .btn-close {
+            background: none;
+        }
+        .progress {
+            height: 14px;
+            border-radius: 7px;
+            background: #e9ecef;
+        }
+        .progress-bar {
+            font-size: 0.95rem;
+            font-weight: 600;
+        }
+        @media (max-width: 900px) {
+            .grev-card { margin-bottom: 1.5rem; }
+            .card-header { font-size: 1rem; }
+        }
+        @media (max-width: 600px) {
+            .grev-card, .card, .modal-content { border-radius: 10px; }
+            .card-header { font-size: 0.95rem; }
+            .status-badge { font-size: 0.95rem; padding: 6px 12px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container py-5">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2 class="mb-0">Grev Yönetimi</h2>
+            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#yeniGrevModal">
+                <i class="fas fa-plus"></i> Yeni Grev Kararı
+            </button>
+        </div>
+        <!-- Tüm Grevler Tablosu -->
+        <div class="card mb-5">
+            <div class="card-header bg-secondary text-white">Tüm Grevler</div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-striped mb-0">
+                        <thead>
+                            <tr>
+                                <th>Başlık</th>
+                                <th>Neden</th>
+                                <th>Karar Tarihi</th>
+                                <th>Başlangıç</th>
+                                <th>Bitiş</th>
+                                <th>Katılımcı</th>
+                                <th>Durum</th>
+                                <th>Oylama Sonucu</th>
+                                <th>İşlem</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        <% if (grevler && grevler.length === 0) { %>
+                            <tr><td colspan="9" class="text-center">Henüz grev oluşturulmadı.</td></tr>
+                        <% } else { %>
+                        <% grevler.forEach(function(grev) { %>
+                            <tr>
+                                <td><%= grev.baslik %></td>
+                                <td><%= grev.neden %></td>
+                                <td><%= new Date(grev.karar_tarihi).toLocaleDateString('tr-TR') %></td>
+                                <td><%= new Date(grev.baslangic_tarihi).toLocaleDateString('tr-TR') %></td>
+                                <td><%= new Date(grev.bitis_tarihi).toLocaleDateString('tr-TR') %></td>
+                                <td><%= grev.katilimci_sayisi %></td>
+                                <td><span class="status-badge status-<%= grev.durum %>"><%= grev.durum.charAt(0).toUpperCase() + grev.durum.slice(1) %></span></td>
+                                <td>
+                                    <% if (grev.durum === 'oylamada') { %>
+                                        <span class="text-primary">Oylamada (<%= grev.katilimOran %>% katılım)</span>
+                                    <% } else if (grev.durum === 'bekleme') { %>
+                                        <div class="oylama-sonuc mb-3">
+                                            <h6 class="text-primary mb-2">Oylama Sonuçları:</h6>
+                                            <p class="mb-1">Toplam Katılımcı: <%= grev.hedef_katilimci %> kişi</p>
+                                            <p class="mb-1">Oy Kullanan: <%= grev.toplam_oy %> kişi (<%= grev.katilimOran %>% katılım)</p>
+                                            <p class="mb-1">Evet: <%= grev.evet %> oy (<%= grev.evetOran %>%)</p>
+                                            <p class="mb-1">Hayır: <%= grev.hayir %> oy (<%= (100 - grev.evetOran) %>%)</p>
+                                            <div class="progress mb-2" style="height: 20px;">
+                                                <div class="progress-bar bg-success" style="width: <%= grev.evetOran %>%" title="Evet: <%= grev.evetOran %>%">
+                                                    <%= grev.evetOran %>%
+                                                </div>
+                                                <div class="progress-bar bg-danger" style="width: <%= (100 - grev.evetOran) %>%" title="Hayır: <%= (100 - grev.evetOran) %>%">
+                                                    <%= (100 - grev.evetOran) %>%
+                                                </div>
+                                            </div>
+                                            <div class="btn-group mt-3">
+                                                <form action="/sendikaci/grev-yonetim/karar/<%= grev.id %>" method="POST" class="d-inline me-2">
+                                                    <input type="hidden" name="karar" value="onay">
+                                                    <button class="btn btn-success btn-sm" onclick="return confirm('Bu grevi onaylamak istediğinize emin misiniz?')">
+                                                        <i class="fas fa-check"></i> Onayla
+                                                    </button>
+                                                </form>
+                                                <form action="/sendikaci/grev-yonetim/karar/<%= grev.id %>" method="POST" class="d-inline">
+                                                    <input type="hidden" name="karar" value="red">
+                                                    <button class="btn btn-danger btn-sm" onclick="return confirm('Bu grevi reddetmek istediğinize emin misiniz?')">
+                                                        <i class="fas fa-times"></i> Reddet
+                                                    </button>
+                                                </form>
+                                            </div>
+                                        </div>
+                                    <% } else { %>
+                                        <span class="text-<%= grev.durum === 'onaylandi' ? 'success' : 'danger' %>">
+                                            <%= grev.durum === 'onaylandi' ? 'Onaylandı' : 'Reddedildi' %>
+                                            (<%= grev.evetOran %>% Evet)
+                                        </span>
+                                    <% } %>
+                                </td>
+                                <td>
+                                    <form action="/sendikaci/grev-yonetim/sil/<%= grev.id %>" method="POST" class="d-inline">
+                                        <button class="btn btn-danger btn-sm" onclick="return confirm('Bu grevi silmek istediğinize emin misiniz?')">
+                                            <i class="fas fa-trash"></i> Sil
+                                        </button>
+                                    </form>
+                                </td>
+                            </tr>
+                        <% }); %>
+                        <% } %>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        <!-- Aktif Oylama Grevleri -->
+        <h4 class="mt-5 mb-3">Aktif Oylama Grevleri</h4>
+        <div class="row g-4">
+            <% if (aktifGrevler && aktifGrevler.length === 0) { %>
+                <div class="col-12"><div class="alert alert-secondary">Şu anda oylamada olan grev yok.</div></div>
+            <% } else { %>
+            <% aktifGrevler.forEach(function(grev) { %>
+            <div class="col-md-6 col-lg-4">
+                <div class="card grev-card">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start mb-3">
+                            <h5 class="card-title mb-0"><%= grev.baslik %></h5>
+                            <span class="status-badge status-ongoing">Oylamada</span>
+                        </div>
+                        <p class="card-text text-muted mb-2"><i class="fas fa-calendar-alt me-2"></i>Karar Tarihi: <%= new Date(grev.karar_tarihi).toLocaleDateString('tr-TR') %></p>
+                        <p class="card-text text-muted mb-2"><i class="fas fa-clock me-2"></i>Başlangıç: <%= new Date(grev.baslangic_tarihi).toLocaleDateString('tr-TR') %></p>
+                        <p class="card-text text-muted mb-2"><i class="fas fa-users me-2"></i>Katılımcı İşçi: <%= grev.katilimci_sayisi %></p>
+                        <div class="progress mb-2"><div class="progress-bar bg-success" style="width: <%= grev.evetOran || 0 %>%"></div></div>
+                        <small class="text-muted">Oylama Durumu: <%= grev.evetOran || 0 %>% Evet (<%= grev.evet || 0 %> Evet / <%= grev.hayir || 0 %> Hayır)</small>
+                    </div>
+                </div>
+            </div>
+            <% }); %>
+            <% } %>
+        </div>
+        <!-- Geçmiş Grevler -->
+        <h4 class="mt-5 mb-3">Geçmiş Grevler</h4>
+        <div class="card mb-5">
+            <div class="card-header bg-secondary text-white">Geçmiş Grevler</div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-striped mb-0">
+                        <thead>
+                            <tr>
+                                <th>Başlık</th>
+                                <th>Neden</th>
+                                <th>Karar Tarihi</th>
+                                <th>Başlangıç</th>
+                                <th>Bitiş</th>
+                                <th>Katılımcı</th>
+                                <th>Durum</th>
+                                <th>Oylama Sonucu</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        <% if (grevler && grevler.filter(g => g.durum === 'onaylandi' || g.durum === 'reddedildi').length === 0) { %>
+                            <tr><td colspan="8" class="text-center">Henüz geçmiş grev yok.</td></tr>
+                        <% } else { %>
+                        <% grevler.filter(g => g.durum === 'onaylandi' || g.durum === 'reddedildi').forEach(function(grev) { %>
+                            <tr>
+                                <td><%= grev.baslik %></td>
+                                <td><%= grev.neden %></td>
+                                <td><%= new Date(grev.karar_tarihi).toLocaleDateString('tr-TR') %></td>
+                                <td><%= new Date(grev.baslangic_tarihi).toLocaleDateString('tr-TR') %></td>
+                                <td><%= new Date(grev.bitis_tarihi).toLocaleDateString('tr-TR') %></td>
+                                <td><%= grev.katilimci_sayisi %></td>
+                                <td><span class="status-badge status-<%= grev.durum %>"><%= grev.durum === 'onaylandi' ? 'Onaylandı' : 'Reddedildi' %></span></td>
+                                <td>Evet: <%= grev.evet %> / Hayır: <%= grev.hayir %> (<%= grev.evetOran %>%)</td>
+                            </tr>
+                        <% }); %>
+                        <% } %>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        <!-- Yeni Grev Kararı Modal -->
+        <div class="modal fade" id="yeniGrevModal" tabindex="-1">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Yeni Grev Kararı Oluştur</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <form id="yeniGrevForm" action="/sendikaci/grev-yonetim/ekle" method="POST">
+                            <div class="mb-3">
+                                <label class="form-label">Grev Adı/Konusu</label>
+                                <input type="text" name="baslik" class="form-control" required>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Grev Nedeni</label>
+                                <textarea class="form-control" name="neden" rows="4" required></textarea>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Karar Tarihi</label>
+                                    <input type="date" name="karar_tarihi" class="form-control" required>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Başlangıç Tarihi</label>
+                                    <input type="date" name="baslangic_tarihi" class="form-control" required>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Bitiş Tarihi</label>
+                                    <input type="date" name="bitis_tarihi" class="form-control" required>
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">İptal</button>
+                                <button type="submit" class="btn btn-primary">Grev Kararı Oluştur</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html> 

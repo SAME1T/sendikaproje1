@@ -590,8 +590,6 @@ app.get('/toplantilar', async (req, res) => {
     if (!req.session.userId || req.session.userType !== 'sendikaci') {
         return res.redirect('/giris/sendikaci');
     }
-    const pool = require('./db');
-    // Sadece katılımcı veya oluşturan olduğu toplantılar
     const userId = req.session.userId;
     const result = await pool.query(`
         SELECT * FROM toplantilar 
@@ -606,7 +604,6 @@ app.post('/toplantilar/sil/:id', async (req, res) => {
     if (!req.session.userId || req.session.userType !== 'sendikaci') {
         return res.status(403).send('Yetkisiz erişim');
     }
-    const pool = require('./db');
     const id = req.params.id;
     // Sadece oluşturan kişi silebilir
     await pool.query('DELETE FROM toplantilar WHERE id = $1 AND olusturan_id = $2', [id, req.session.userId]);
@@ -619,9 +616,7 @@ app.post('/toplantilar/ekle', async (req, res) => {
         return res.status(403).send('Yetkisiz erişim');
     }
     const { baslik, tarih, saat, yer, gundem, yapilacaklar, katilimcilar, katilimci } = req.body;
-    const pool = require('./db');
-    // Çoklu seçimden gelen katılımcı id'lerini virgülle birleştir
-    let katilimciStr = Array.isArray(katilimcilar) ? katilimcilar.join(',') : katilimcilar;
+    let katilimciStr = Array.isArray(katilimcilar) ? katilimcilar.join(',') : katilimcil;
     await pool.query(
         'INSERT INTO toplantilar (baslik, tarih, saat, yer, gundem, yapilacaklar, olusturan_id, katilimcilar) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)',
         [baslik, tarih, saat, yer, gundem, yapilacaklar, req.session.userId, katilimciStr]
@@ -642,7 +637,6 @@ app.post('/paylasim-ekle', mediaUpload.single('media'), async (req, res) => {
         media_path = '/uploads/media/' + req.file.filename;
     }
     
-    const pool = require('./db');
     await pool.query(
         'INSERT INTO paylasimlar (user_id, kategori, icerik, gizlilik, hedef_kullanici_id, media_path) VALUES ($1, $2, $3, $4, $5, $6)',
         [req.session.userId, kategori, icerik, gizlilik, hedef_kullanici_id || null, media_path]
@@ -655,7 +649,6 @@ app.post('/paylasim/:id/begen', async (req, res) => {
     if (!req.session.userId) return res.status(403).send('Yetkisiz erişim');
     const paylasim_id = req.params.id;
     const user_id = req.session.userId;
-    const pool = require('./db');
     try {
         // Beğeni var mı kontrol et
         const result = await pool.query('SELECT * FROM begeniler WHERE paylasim_id = $1 AND user_id = $2', [paylasim_id, user_id]);
@@ -676,7 +669,6 @@ app.post('/paylasim/:id/begen', async (req, res) => {
 
 // Bir paylaşımın beğeni sayısı ve kullanıcının beğenip beğenmediği
 async function getBegenilerForPaylasim(paylasim_id, user_id) {
-    const pool = require('./db');
     const countResult = await pool.query('SELECT COUNT(*) FROM begeniler WHERE paylasim_id = $1', [paylasim_id]);
     const userResult = await pool.query('SELECT 1 FROM begeniler WHERE paylasim_id = $1 AND user_id = $2', [paylasim_id, user_id]);
     return {
@@ -687,8 +679,6 @@ async function getBegenilerForPaylasim(paylasim_id, user_id) {
 
 // Paylaşım akışı (işçi ve sendikacı dashboardunda kullanılacak)
 async function getPaylasimlarForUser(userId) {
-    const pool = require('./db');
-    // Kullanıcıya açık olan paylaşımlar: gizlilik 'herkes' olanlar veya hedef_kullanici_id bu kullanıcı olanlar veya kendi paylaşımları
     const result = await pool.query(
         `SELECT p.*, u.ad, u.soyad, u.rol FROM paylasimlar p
          JOIN users u ON u.id = p.user_id
@@ -710,7 +700,6 @@ app.post('/paylasim/:id/yorum', async (req, res) => {
     const paylasim_id = req.params.id;
     const user_id = req.session.userId;
     const { icerik } = req.body;
-    const pool = require('./db');
     try {
         await pool.query('INSERT INTO yorumlar (paylasim_id, user_id, icerik) VALUES ($1, $2, $3)', [paylasim_id, user_id, icerik]);
         res.json({ success: true });
@@ -723,7 +712,6 @@ app.post('/paylasim/:id/yorum', async (req, res) => {
 // Bir paylaşımın yorumlarını getir
 app.get('/paylasim/:id/yorumlar', async (req, res) => {
     const paylasim_id = req.params.id;
-    const pool = require('./db');
     try {
         const result = await pool.query(
             `SELECT y.*, u.ad, u.soyad FROM yorumlar y JOIN users u ON u.id = y.user_id WHERE y.paylasim_id = $1 ORDER BY y.created_at ASC`,
@@ -741,16 +729,19 @@ app.post('/paylasim/:id/sil', async (req, res) => {
     if (!req.session.userId) return res.status(403).json({ error: 'Yetkisiz erişim' });
     const paylasim_id = req.params.id;
     const user_id = req.session.userId;
-    const pool = require('./db');
-    // Sadece paylaşımı yapan veya sendikacı ise silebilir
-    const result = await pool.query('SELECT * FROM paylasimlar WHERE id = $1', [paylasim_id]);
-    if (!result.rows.length) return res.status(404).json({ error: 'Paylaşım bulunamadı' });
-    const paylasim = result.rows[0];
-    if (paylasim.user_id !== user_id && req.session.userType !== 'sendikaci') {
-        return res.status(403).json({ error: 'Sadece kendi paylaşımınızı silebilirsiniz.' });
+    try {
+        const result = await pool.query('SELECT * FROM paylasimlar WHERE id = $1', [paylasim_id]);
+        if (!result.rows.length) return res.status(404).json({ error: 'Paylaşım bulunamadı' });
+        const paylasim = result.rows[0];
+        if (paylasim.user_id !== user_id && req.session.userType !== 'sendikaci') {
+            return res.status(403).json({ error: 'Sadece kendi paylaşımınızı silebilirsiniz.' });
+        }
+        await pool.query('DELETE FROM paylasimlar WHERE id = $1', [paylasim_id]);
+        res.json({ success: true });
+    } catch (error) {
+        console.error('Paylaşım silme hatası:', error);
+        res.status(500).json({ error: 'Paylaşım silinirken bir hata oluştu' });
     }
-    await pool.query('DELETE FROM paylasimlar WHERE id = $1', [paylasim_id]);
-    res.json({ success: true });
 });
 
 // YORUM SİLME
@@ -758,15 +749,19 @@ app.post('/yorum/:id/sil', async (req, res) => {
     if (!req.session.userId) return res.status(403).json({ error: 'Yetkisiz erişim' });
     const yorum_id = req.params.id;
     const user_id = req.session.userId;
-    const pool = require('./db');
-    const result = await pool.query('SELECT * FROM yorumlar WHERE id = $1', [yorum_id]);
-    if (!result.rows.length) return res.status(404).json({ error: 'Yorum bulunamadı' });
-    const yorum = result.rows[0];
-    if (yorum.user_id !== user_id && req.session.userType !== 'sendikaci') {
-        return res.status(403).json({ error: 'Sadece kendi yorumunuzu silebilirsiniz.' });
+    try {
+        const result = await pool.query('SELECT * FROM yorumlar WHERE id = $1', [yorum_id]);
+        if (!result.rows.length) return res.status(404).json({ error: 'Yorum bulunamadı' });
+        const yorum = result.rows[0];
+        if (yorum.user_id !== user_id && req.session.userType !== 'sendikaci') {
+            return res.status(403).json({ error: 'Sadece kendi yorumunuzu silebilirsiniz.' });
+        }
+        await pool.query('DELETE FROM yorumlar WHERE id = $1', [yorum_id]);
+        res.json({ success: true });
+    } catch (error) {
+        console.error('Yorum silme hatası:', error);
+        res.status(500).json({ error: 'Yorum silinirken bir hata oluştu' });
     }
-    await pool.query('DELETE FROM yorumlar WHERE id = $1', [yorum_id]);
-    res.json({ success: true });
 });
 
 // YORUM BEĞENME (TOGGLE)
@@ -774,31 +769,43 @@ app.post('/yorum/:id/begen', async (req, res) => {
     if (!req.session.userId) return res.status(403).json({ error: 'Yetkisiz erişim' });
     const yorum_id = req.params.id;
     const user_id = req.session.userId;
-    const pool = require('./db');
-    const result = await pool.query('SELECT * FROM yorum_begeniler WHERE yorum_id = $1 AND user_id = $2', [yorum_id, user_id]);
-    if (result.rows.length > 0) {
-        await pool.query('DELETE FROM yorum_begeniler WHERE yorum_id = $1 AND user_id = $2', [yorum_id, user_id]);
-        return res.json({ liked: false });
-    } else {
-        await pool.query('INSERT INTO yorum_begeniler (yorum_id, user_id) VALUES ($1, $2)', [yorum_id, user_id]);
-        return res.json({ liked: true });
+    try {
+        const result = await pool.query('SELECT * FROM yorum_begeniler WHERE yorum_id = $1 AND user_id = $2', [yorum_id, user_id]);
+        if (result.rows.length > 0) {
+            await pool.query('DELETE FROM yorum_begeniler WHERE yorum_id = $1 AND user_id = $2', [yorum_id, user_id]);
+            return res.json({ liked: false });
+        } else {
+            await pool.query('INSERT INTO yorum_begeniler (yorum_id, user_id) VALUES ($1, $2)', [yorum_id, user_id]);
+            return res.json({ liked: true });
+        }
+    } catch (error) {
+        console.error('Yorum beğenme hatası:', error);
+        res.status(500).json({ error: 'Yorum beğenme işlemi sırasında hata oluştu' });
     }
 });
 
 // PAYLAŞIMI BEĞENENLERİ GETİR
 app.get('/paylasim/:id/begenenler', async (req, res) => {
     const paylasim_id = req.params.id;
-    const pool = require('./db');
-    const result = await pool.query('SELECT u.ad, u.soyad FROM begeniler b JOIN users u ON u.id = b.user_id WHERE b.paylasim_id = $1', [paylasim_id]);
-    res.json(result.rows);
+    try {
+        const result = await pool.query('SELECT u.ad, u.soyad FROM begeniler b JOIN users u ON u.id = b.user_id WHERE b.paylasim_id = $1', [paylasim_id]);
+        res.json(result.rows);
+    } catch (error) {
+        console.error('Paylaşım beğenenleri çekme hatası:', error);
+        res.status(500).json({ error: 'Paylaşım beğenenleri çekilirken bir hata oluştu' });
+    }
 });
 
 // YORUMU BEĞENENLERİ GETİR
 app.get('/yorum/:id/begenenler', async (req, res) => {
     const yorum_id = req.params.id;
-    const pool = require('./db');
-    const result = await pool.query('SELECT u.ad, u.soyad FROM yorum_begeniler yb JOIN users u ON u.id = yb.user_id WHERE yb.yorum_id = $1', [yorum_id]);
-    res.json(result.rows);
+    try {
+        const result = await pool.query('SELECT u.ad, u.soyad FROM yorum_begeniler yb JOIN users u ON u.id = yb.user_id WHERE yb.yorum_id = $1', [yorum_id]);
+        res.json(result.rows);
+    } catch (error) {
+        console.error('Yorum beğenenleri çekme hatası:', error);
+        res.status(500).json({ error: 'Yorum beğenenleri çekilirken bir hata oluştu' });
+    }
 });
 
 // API routes
@@ -823,7 +830,6 @@ app.listen(PORT, () => {
 // Ayarlar/profil düzenleme sayfası (GET)
 app.get('/ayarlar', async (req, res) => {
     if (!req.session.userId) return res.redirect('/');
-    const pool = require('./db');
     const result = await pool.query('SELECT id, ad, soyad, email, telefon FROM users WHERE id = $1', [req.session.userId]);
     if (!result.rows.length) return res.redirect('/');
     res.render('ayarlar', { user: result.rows[0], mesaj: null, hata: null });
@@ -833,7 +839,6 @@ app.get('/ayarlar', async (req, res) => {
 app.post('/ayarlar', async (req, res) => {
     if (!req.session.userId) return res.redirect('/');
     const { ad, soyad, email, telefon, sifre, sifre_tekrar } = req.body;
-    const pool = require('./db');
     let hata = null, mesaj = null;
     if (sifre && sifre !== sifre_tekrar) {
         hata = 'Şifreler eşleşmiyor!';
@@ -849,4 +854,242 @@ app.post('/ayarlar', async (req, res) => {
     // Güncel bilgileri tekrar çek
     const result = await pool.query('SELECT id, ad, soyad, email, telefon FROM users WHERE id = $1', [req.session.userId]);
     res.render('ayarlar', { user: result.rows[0], mesaj, hata });
+});
+
+// Grev Yönetimi & Kararları Route'ları
+// İşçi: Grev Kararları
+app.get('/isci/grev-kararlari', async (req, res) => {
+    if (!req.session.userId || req.session.userType !== 'isci') {
+        return res.redirect('/giris/isci');
+    }
+    try {
+        // Tüm grevleri getir (oylamada olanlar ve sonuçlananlar)
+        const grevler = await pool.query(
+            'SELECT g.*, ' +
+            '(SELECT COUNT(*) FROM grev_oylari WHERE grev_id = g.id AND oy = true) as evet, ' +
+            '(SELECT COUNT(*) FROM grev_oylari WHERE grev_id = g.id AND oy = false) as hayir, ' +
+            '(SELECT COUNT(*) FROM grev_oylari WHERE grev_id = g.id) as toplam_oy ' +
+            'FROM grevler g ' +
+            'WHERE g.hedef_rol = $1 ' + // Sadece işçilere yönelik grevler
+            'ORDER BY CASE ' +
+            "   WHEN g.durum = 'oylamada' THEN 1 " +
+            "   WHEN g.durum = 'bekleme' THEN 2 " +
+            "   WHEN g.durum = 'onaylandi' THEN 3 " +
+            "   WHEN g.durum = 'reddedildi' THEN 4 " +
+            'END, g.karar_tarihi DESC',
+            [1] // rol=1 (işçiler)
+        );
+
+        // Oylama oranlarını hesapla
+        const aktifGrevler = grevler.rows.map(grev => {
+            const evet = parseInt(grev.evet) || 0;
+            const hayir = parseInt(grev.hayir) || 0;
+            const toplam = evet + hayir;
+            return {
+                ...grev,
+                evet,
+                hayir,
+                evetOran: toplam > 0 ? Math.round((evet / toplam) * 100) : 0
+            };
+        });
+
+        res.render('isci/grev-kararlari', { 
+            user: req.session.user,
+            aktifGrevler
+        });
+    } catch (err) {
+        console.error('Grev kararları yükleme hatası:', err);
+        res.status(500).send('Grev kararları yüklenemedi');
+    }
+});
+
+// Sendikacı: Grev Yönetimi
+app.get('/sendikaci/grev-yonetim', async (req, res) => {
+    if (!req.session.userId || req.session.userType !== 'sendikaci') {
+        return res.redirect('/giris/sendikaci');
+    }
+    try {
+        // Tüm grevler (sendikacının oluşturdukları)
+        const result = await pool.query(
+            'SELECT g.*, ' +
+            '(SELECT COUNT(*) FROM grev_oylari WHERE grev_id = g.id AND oy = true) as evet, ' +
+            '(SELECT COUNT(*) FROM grev_oylari WHERE grev_id = g.id AND oy = false) as hayir, ' +
+            '(SELECT COUNT(*) FROM grev_oylari WHERE grev_id = g.id) as toplam_oy, ' +
+            '(SELECT COUNT(*) FROM users WHERE rol = g.hedef_rol) as hedef_katilimci ' +
+            'FROM grevler g WHERE g.olusturan_id = $1 ' +
+            'ORDER BY CASE ' +
+            "   WHEN g.durum = 'oylamada' THEN 1 " +
+            "   WHEN g.durum = 'bekleme' THEN 2 " +
+            "   WHEN g.durum = 'onaylandi' THEN 3 " +
+            "   WHEN g.durum = 'reddedildi' THEN 4 " +
+            'END, g.karar_tarihi DESC',
+            [req.session.userId]
+        );
+
+        // Oylama oranlarını hesapla
+        const grevler = result.rows.map(grev => {
+            const evet = parseInt(grev.evet) || 0;
+            const hayir = parseInt(grev.hayir) || 0;
+            const toplam = evet + hayir;
+            const hedef_katilimci = parseInt(grev.hedef_katilimci) || 0;
+            return {
+                ...grev,
+                evet,
+                hayir,
+                evetOran: toplam > 0 ? Math.round((evet / toplam) * 100) : 0,
+                katilimOran: hedef_katilimci > 0 ? Math.round((toplam / hedef_katilimci) * 100) : 0
+            };
+        });
+
+        // Sadece oylamada olanlar
+        const aktifGrevler = grevler.filter(g => g.durum === 'oylamada');
+
+        res.render('sendikaci/grev-yonetim', { 
+            user: req.session.user,
+            grevler,
+            aktifGrevler
+        });
+    } catch (err) {
+        console.error('Grev yönetimi yükleme hatası:', err);
+        res.status(500).send('Grev yönetimi yüklenemedi');
+    }
+});
+
+// Sendikacı: Grev ekle
+app.post('/sendikaci/grev-yonetim/ekle', async (req, res) => {
+    try {
+        // Yetki kontrolü
+        if (!req.session.userId || req.session.userType !== 'sendikaci') {
+            return res.status(403).json({ error: 'Yetkisiz erişim' });
+        }
+
+        const { baslik, neden, karar_tarihi, baslangic_tarihi, bitis_tarihi } = req.body;
+        
+        // Hedef rol her zaman işçiler (1) olacak
+        const hedef_rol = 1;
+
+        // Toplam işçi sayısını hesapla
+        const countResult = await pool.query('SELECT COUNT(*) as count FROM users WHERE rol = $1', [hedef_rol]);
+        const katilimci_sayisi = parseInt(countResult.rows[0].count);
+
+        // Grevi ekle
+        const grevResult = await pool.query(
+            'INSERT INTO grevler (baslik, neden, karar_tarihi, baslangic_tarihi, bitis_tarihi, sendika_id, katilimci_sayisi, durum, olusturan_id, hedef_rol) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10) RETURNING id',
+            [baslik, neden, karar_tarihi, baslangic_tarihi, bitis_tarihi, req.session.userId, katilimci_sayisi, 'oylamada', req.session.userId, hedef_rol]
+        );
+
+        res.redirect('/sendikaci/grev-yonetim');
+    } catch (err) {
+        console.error('Grev ekleme hatası:', err);
+        res.status(500).json({ error: 'Grev eklenemedi: ' + err.message });
+    }
+});
+
+// Sendikacı: Grev sil
+app.post('/sendikaci/grev-yonetim/sil/:id', async (req, res) => {
+    if (!req.session.userId || req.session.userType !== 'sendikaci') return res.status(403).send('Yetkisiz erişim');
+    const grev_id = req.params.id;
+    try {
+        await pool.query('DELETE FROM grevler WHERE id = $1 AND olusturan_id = $2', [grev_id, req.session.userId]);
+        res.redirect('/sendikaci/grev-yonetim');
+    } catch (err) {
+        console.error('Grev silme hatası:', err);
+        res.status(500).send('Grev silinemedi');
+    }
+});
+
+// Oylama (işçi)
+app.post('/grev/oyla/:grev_id', async (req, res) => {
+    try {
+        // Yetki kontrolü
+        if (!req.session.userId || req.session.userType !== 'isci') {
+            return res.status(403).json({ error: 'Yetkisiz erişim' });
+        }
+
+        const grev_id = req.params.grev_id;
+        const { oy } = req.body;
+
+        // Grevin durumunu kontrol et
+        const grevDurum = await pool.query('SELECT durum FROM grevler WHERE id = $1', [grev_id]);
+        if (!grevDurum.rows.length || grevDurum.rows[0].durum !== 'oylamada') {
+            return res.status(400).json({ error: 'Bu grev oylamaya açık değil' });
+        }
+
+        // Daha önce oy kullanılmış mı kontrol et
+        const kontrol = await pool.query(
+            'SELECT 1 FROM grev_oylari WHERE grev_id = $1 AND user_id = $2',
+            [grev_id, req.session.userId]
+        );
+        if (kontrol.rows.length > 0) {
+            return res.status(400).json({ error: 'Bu greve zaten oy verdiniz' });
+        }
+
+        // Oyu kaydet
+        await pool.query(
+            'INSERT INTO grev_oylari (grev_id, user_id, oy) VALUES ($1, $2, $3)',
+            [grev_id, req.session.userId, oy === 'evet']
+        );
+
+        // Toplam oy sayısını kontrol et
+        const grevBilgisi = await pool.query(
+            'SELECT g.katilimci_sayisi, COUNT(o.*) as toplam_oy FROM grevler g LEFT JOIN grev_oylari o ON o.grev_id = g.id WHERE g.id = $1 GROUP BY g.id, g.katilimci_sayisi',
+            [grev_id]
+        );
+
+        // Tüm oylar kullanıldıysa durumu 'bekleme' yap
+        if (parseInt(grevBilgisi.rows[0].toplam_oy) >= parseInt(grevBilgisi.rows[0].katilimci_sayisi)) {
+            await pool.query(
+                'UPDATE grevler SET durum = $1 WHERE id = $2',
+                ['bekleme', grev_id]
+            );
+        }
+
+        res.redirect('/isci/grev-kararlari');
+    } catch (err) {
+        console.error('Oylama hatası:', err);
+        res.status(500).json({ error: 'Oylama kaydedilemedi: ' + err.message });
+    }
+});
+
+// Sendikacı: Grev kararı (onay/red)
+app.post('/sendikaci/grev-yonetim/karar/:id', async (req, res) => {
+    try {
+        // Yetki kontrolü
+        if (!req.session.userId || req.session.userType !== 'sendikaci') {
+            return res.status(403).json({ error: 'Yetkisiz erişim' });
+        }
+
+        const grev_id = req.params.id;
+        const { karar } = req.body;
+
+        // Grevin durumunu ve sahipliğini kontrol et
+        const grevKontrol = await pool.query(
+            'SELECT durum, olusturan_id FROM grevler WHERE id = $1',
+            [grev_id]
+        );
+
+        if (!grevKontrol.rows.length) {
+            return res.status(404).json({ error: 'Grev bulunamadı' });
+        }
+
+        if (grevKontrol.rows[0].olusturan_id !== req.session.userId) {
+            return res.status(403).json({ error: 'Bu grev üzerinde yetkiniz yok' });
+        }
+
+        if (grevKontrol.rows[0].durum !== 'bekleme') {
+            return res.status(400).json({ error: 'Bu grev için karar verilemez' });
+        }
+
+        // Kararı kaydet
+        const yeniDurum = karar === 'onay' ? 'onaylandi' : 'reddedildi';
+        await pool.query(
+            'UPDATE grevler SET durum = $1 WHERE id = $2',
+            [yeniDurum, grev_id]
+        );
+
+        res.redirect('/sendikaci/grev-yonetim');
+    } catch (err) {
+        console.error('Grev karar hatası:', err);
+        res.status(500).json({ error: 'Karar kaydedilemedi: ' + err.message });
+    }
 }); 

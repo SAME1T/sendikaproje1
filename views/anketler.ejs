@@ -149,8 +149,9 @@
     </div>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
-    var allSurveys = <%- JSON.stringify(surveys) %>;
-    var allAnswers = <%- JSON.stringify(answers) %>;
+    var allSurveys = <%- JSON.stringify(surveys || []) %>;
+    var allAnswers = <%- JSON.stringify(answers || []) %>;
+    
     // Cevaplanan anketler için grafik çiz
     document.addEventListener('DOMContentLoaded', function() {
         if (!allSurveys || !allAnswers) return;

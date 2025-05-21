@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Grev Kararları</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(120deg, #e0eafc 0%, #cfdef3 100%);
+            font-family: 'Segoe UI', 'Roboto', Arial, sans-serif;
+        }
+        .grev-card {
+            transition: box-shadow 0.3s;
+            border: 1px solid #e3e6ed;
+            box-shadow: 0 2px 12px rgba(44,62,80,0.07);
+            border-radius: 18px;
+            background: #fff;
+        }
+        .grev-card:hover {
+            box-shadow: 0 6px 24px rgba(44,62,80,0.13);
+        }
+        .status-badge {
+            padding: 7px 18px;
+            border-radius: 18px;
+            font-weight: 600;
+            font-size: 1rem;
+            letter-spacing: 0.5px;
+        }
+        .status-ongoing { background: #d6eaff; color: #1b4f72; }
+        .status-planned { background: #f7e7b7; color: #7c6f2a; }
+        .status-onaylandi { background: #eafaf1; color: #229954; }
+        .status-reddedildi { background: #fdecea; color: #c0392b; }
+        .btn-primary, .vote-btn {
+            font-weight: 600;
+            border-radius: 8px;
+            letter-spacing: 0.5px;
+        }
+        .vote-btn { font-size: 1rem; padding: 10px 0; }
+        .vote-yes { background: #229954; color: #fff; }
+        .vote-no { background: #c0392b; color: #fff; }
+        .vote-btn:hover { opacity: 0.9; }
+        .progress {
+            height: 14px;
+            border-radius: 7px;
+            background: #e9ecef;
+        }
+        .progress-bar {
+            font-size: 0.95rem;
+            font-weight: 600;
+        }
+        h2, h4 { color: #2c3e50; font-weight: 700; }
+        @media (max-width: 900px) {
+            .grev-card { margin-bottom: 1.5rem; }
+        }
+        @media (max-width: 600px) {
+            .grev-card { border-radius: 10px; }
+            .status-badge { font-size: 0.95rem; padding: 6px 12px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container py-5">
+        <h2 class="mb-4">Grev Kararları</h2>
+
+        <!-- Aktif Oylamalar -->
+        <h4 class="mb-3">Aktif Oylamalar</h4>
+        <div class="row g-4 mb-5">
+            <% if (!aktifGrevler || aktifGrevler.filter(g => g.durum === 'oylamada').length === 0) { %>
+                <div class="col-12">
+                    <div class="alert alert-info">Şu anda aktif oylama bulunmamaktadır.</div>
+                </div>
+            <% } else { %>
+                <% aktifGrevler.filter(g => g.durum === 'oylamada').forEach(function(grev) { %>
+                <div class="col-md-6 col-lg-4">
+                    <div class="card grev-card">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-start mb-3">
+                                <h5 class="card-title mb-0"><%= grev.baslik %></h5>
+                                <span class="status-badge status-ongoing">Oylamada</span>
+                            </div>
+                            <p class="card-text text-muted mb-3">
+                                <i class="fas fa-calendar-alt me-2"></i>Karar Tarihi: <%= new Date(grev.karar_tarihi).toLocaleDateString('tr-TR') %>
+                            </p>
+                            <p class="card-text text-muted mb-3">
+                                <i class="fas fa-clock me-2"></i>Başlangıç: <%= new Date(grev.baslangic_tarihi).toLocaleDateString('tr-TR') %>
+                            </p>
+                            <div class="mb-3">
+                                <small class="text-muted">Katılımcı Sayısı: <%= grev.katilimci_sayisi %></small>
+                            </div>
+                            <div class="vote-buttons mb-3">
+                                <form action="/grev/oyla/<%= grev.id %>" method="POST" class="d-flex gap-2 vote-form">
+                                    <button name="oy" value="evet" class="vote-btn vote-yes" type="submit">
+                                        <i class="fas fa-thumbs-up me-2"></i>Evet (<%= grev.evet || 0 %>)
+                                    </button>
+                                    <button name="oy" value="hayir" class="vote-btn vote-no" type="submit">
+                                        <i class="fas fa-thumbs-down me-2"></i>Hayır (<%= grev.hayir || 0 %>)
+                                    </button>
+                                </form>
+                            </div>
+                            <div class="progress mb-2">
+                                <div class="progress-bar bg-success" style="width: <%= (grev.evetOran || 0) + '%' %>"></div>
+                            </div>
+                            <small class="text-muted">Oylama Durumu: <%= grev.evetOran || 0 %>% Evet</small>
+                        </div>
+                    </div>
+                </div>
+                <% }); %>
+            <% } %>
+        </div>
+
+        <!-- Onay Bekleyen Grevler -->
+        <h4 class="mb-3">Onay Bekleyen Grevler</h4>
+        <div class="row g-4 mb-5">
+            <% if (!aktifGrevler || aktifGrevler.filter(g => g.durum === 'bekleme').length === 0) { %>
+                <div class="col-12">
+                    <div class="alert alert-warning">Onay bekleyen grev yok.</div>
+                </div>
+            <% } else { %>
+                <% aktifGrevler.filter(g => g.durum === 'bekleme').forEach(function(grev) { %>
+                <div class="col-md-6 col-lg-4">
+                    <div class="card grev-card">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-start mb-3">
+                                <h5 class="card-title mb-0"><%= grev.baslik %></h5>
+                                <span class="status-badge status-planned">Onay Bekliyor</span>
+                            </div>
+                            <p class="card-text text-muted mb-3">
+                                <i class="fas fa-calendar-alt me-2"></i>Karar Tarihi: <%= new Date(grev.karar_tarihi).toLocaleDateString('tr-TR') %>
+                            </p>
+                            <p class="card-text text-muted mb-3">
+                                <i class="fas fa-clock me-2"></i>Başlangıç: <%= new Date(grev.baslangic_tarihi).toLocaleDateString('tr-TR') %>
+                            </p>
+                            <div class="mb-3">
+                                <small class="text-muted">Katılımcı Sayısı: <%= grev.katilimci_sayisi %></small>
+                            </div>
+                            <div class="progress mb-2">
+                                <div class="progress-bar bg-success" style="width: <%= (grev.evetOran || 0) + '%' %>"></div>
+                            </div>
+                            <small class="text-muted">Oylama Sonucu: <%= grev.evetOran || 0 %>% Evet (<%= grev.evet || 0 %> Evet / <%= grev.hayir || 0 %> Hayır)</small>
+                        </div>
+                    </div>
+                </div>
+                <% }); %>
+            <% } %>
+        </div>
+
+        <!-- Sonuçlanan Grevler -->
+        <h4 class="mb-3">Sonuçlanan Grevler</h4>
+        <div class="row g-4">
+            <% if (!aktifGrevler || aktifGrevler.filter(g => g.durum === 'onaylandi' || g.durum === 'reddedildi').length === 0) { %>
+                <div class="col-12">
+                    <div class="alert alert-secondary">Henüz sonuçlanan grev bulunmamaktadır.</div>
+                </div>
+            <% } else { %>
+                <% aktifGrevler.filter(g => g.durum === 'onaylandi' || g.durum === 'reddedildi').forEach(function(grev) { %>
+                <div class="col-md-6 col-lg-4">
+                    <div class="card grev-card">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-start mb-3">
+                                <h5 class="card-title mb-0"><%= grev.baslik %></h5>
+                                <span class="status-badge status-<%= grev.durum %>">
+                                    <%= grev.durum === 'onaylandi' ? 'Onaylandı' : 'Reddedildi' %>
+                                </span>
+                            </div>
+                            <p class="card-text text-muted mb-3">
+                                <i class="fas fa-calendar-alt me-2"></i>Karar Tarihi: <%= new Date(grev.karar_tarihi).toLocaleDateString('tr-TR') %>
+                            </p>
+                            <p class="card-text text-muted mb-3">
+                                <i class="fas fa-clock me-2"></i>Başlangıç: <%= new Date(grev.baslangic_tarihi).toLocaleDateString('tr-TR') %>
+                            </p>
+                            <div class="mb-3">
+                                <small class="text-muted">Katılımcı Sayısı: <%= grev.katilimci_sayisi %></small>
+                            </div>
+                            <div class="progress mb-2">
+                                <div class="progress-bar bg-success" style="width: <%= (grev.evetOran || 0) + '%' %>"></div>
+                            </div>
+                            <small class="text-muted">Sonuç: <%= grev.evetOran || 0 %>% Evet (<%= grev.evet || 0 %> Evet / <%= grev.hayir || 0 %> Hayır)</small>
+                        </div>
+                    </div>
+                </div>
+                <% }); %>
+            <% } %>
+        </div>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+    // Oy kullanırken onay sorusu
+    document.querySelectorAll('.vote-form').forEach(function(form) {
+        form.addEventListener('submit', function(e) {
+            const btn = document.activeElement;
+            let mesaj = btn && btn.value === 'evet' ? 'Bu grev kararını ONAYLIYOR musunuz?' : 'Bu grev kararını REDDEDİYOR musunuz?';
+            if (!confirm(mesaj)) {
+                e.preventDefault();
+            }
+        });
+    });
+    </script>
+</body>
+</html> 
