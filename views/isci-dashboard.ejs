@@ -463,6 +463,25 @@
     </style>
 </head>
 <body>
+    <!-- Onay Modalı -->
+    <div class="modal fade" id="cikisOnayModal" tabindex="-1" aria-labelledby="cikisOnayModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="cikisOnayModalLabel">Çıkış Onayı</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Kapat"></button>
+                </div>
+                <div class="modal-body">
+                    Ana sayfaya yönlendirileceksiniz. Çıkış yapmak istediğinize emin misiniz?
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">İptal</button>
+                    <a href="/" class="btn btn-primary">Evet, Çıkış Yap</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Sidebar -->
     <div class="sidebar">
         <div class="d-flex flex-column h-100">
@@ -471,7 +490,7 @@
             </div>
             <ul class="nav flex-column">
                 <li class="nav-item">
-                    <a class="nav-link" href="/isci/dashboard">
+                    <a class="nav-link" href="#" data-bs-toggle="modal" data-bs-target="#cikisOnayModal">
                         <i class="fas fa-home"></i> Ana Sayfa
                     </a>
                 </li>
@@ -486,22 +505,12 @@
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" href="#">
-                        <i class="fas fa-bullhorn"></i> Eylem Planları
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="#">
-                        <i class="fas fa-bell"></i> Duyurular
-                    </a>
-                </li>
-                <li class="nav-item">
                     <a class="nav-link" href="/iletisim">
                         <i class="fas fa-envelope"></i> İletişim
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" href="#">
+                    <a class="nav-link" href="/isci/etkinlikler">
                         <i class="fas fa-calendar-alt"></i> Etkinlikler
                     </a>
                 </li>
@@ -1080,6 +1089,9 @@
                 setTimeout(() => document.body.click(), 100);
             }
         });
+
+        // Bootstrap modal nesnesini oluştur
+        var cikisOnayModal = new bootstrap.Modal(document.getElementById('cikisOnayModal'));
     </script>
 </body>
 </html> 

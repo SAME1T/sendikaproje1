@@ -40,8 +40,8 @@ Modern ve kullanıcı dostu bir sendika yönetim ve iletişim platformu.
 
 ### Gereksinimler
 - Node.js (v14 veya üzeri)
-- MongoDB
-- npm veya yarn
+- PostgreSQL
+- npm 
 
 ### Adımlar
 
@@ -80,7 +80,7 @@ npm start
 
 ### Backend
 - Node.js & Express.js
-- MongoDB & Mongoose
+- PostgreSQL
 - JWT Authentication
 - Multer (Dosya yükleme)
 

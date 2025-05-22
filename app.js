@@ -1092,4 +1092,82 @@ app.post('/sendikaci/grev-yonetim/karar/:id', async (req, res) => {
         console.error('Grev karar hatası:', err);
         res.status(500).json({ error: 'Karar kaydedilemedi: ' + err.message });
     }
+});
+
+// Sendikacı Etkinlik Yönetimi (GET & POST)
+app.get('/sendikaci/etkinlik-yonetim', async (req, res) => {
+    if (!req.session.userId || req.session.userType !== 'sendikaci') {
+        return res.redirect('/giris/sendikaci');
+    }
+    await etkinlikleriGuncelle(pool);
+    const aktifEtkinlikler = await pool.query("SELECT * FROM etkinlikler WHERE durum = 'aktif' ORDER BY tarih, saat");
+    const gecmisEtkinlikler = await pool.query("SELECT * FROM etkinlikler WHERE durum = 'gecmis' ORDER BY bitis_tarihi DESC, bitis_saati DESC");
+    res.render('sendikaci-etkinlik-yonetim', {
+        user: req.session.user,
+        aktifEtkinlikler: aktifEtkinlikler.rows,
+        gecmisEtkinlikler: gecmisEtkinlikler.rows
+    });
+});
+
+app.post('/sendikaci/etkinlik-yonetim', async (req, res) => {
+    if (!req.session.userId || req.session.userType !== 'sendikaci') {
+        return res.redirect('/giris/sendikaci');
+    }
+    const { baslik, aciklama, tarih, saat, bitis_tarihi, bitis_saati, konum, tur } = req.body;
+    console.log('ETKINLIK EKLEME FORMU:', req.body);
+    try {
+        await pool.query(
+            'INSERT INTO etkinlikler (baslik, aciklama, tarih, saat, bitis_tarihi, bitis_saati, konum, tur, olusturan_id) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)',
+            [baslik, aciklama, tarih, saat, bitis_tarihi, bitis_saati, konum, tur, req.session.userId]
+        );
+        console.log('Etkinlik başarıyla eklendi!');
+        res.redirect('/sendikaci/etkinlik-yonetim');
+    } catch (err) {
+        console.error('Etkinlik ekleme HATASI:', err);
+        res.status(500).send('Etkinlik eklenemedi: ' + err.message);
+    }
+});
+
+// Etkinliklerin durumunu güncelle (bitiş tarih+saati ile)
+function etkinlikleriGuncelle(pool) {
+    // Şu anki tarih ve saat
+    const now = new Date();
+    // PostgreSQL'de bitiş tarih+saati birleştirilip karşılaştırılacak
+    // COALESCE ile null değerler için fallback
+    return pool.query(`UPDATE etkinlikler SET durum = 'gecmis' WHERE durum = 'aktif' AND (
+        (bitis_tarihi IS NOT NULL AND bitis_saati IS NOT NULL AND (bitis_tarihi::text || ' ' || bitis_saati::text)::timestamp < NOW())
+        OR (bitis_tarihi IS NULL AND bitis_saati IS NULL AND (tarih::text || ' ' || saat::text)::timestamp < NOW())
+    )`);
+}
+
+// İşçi Etkinlikler (GET)
+app.get('/isci/etkinlikler', async (req, res) => {
+    if (!req.session.userId || req.session.userType !== 'isci') {
+        return res.redirect('/giris/isci');
+    }
+    await etkinlikleriGuncelle(pool);
+    const aktifEtkinlikler = await pool.query("SELECT * FROM etkinlikler WHERE durum = 'aktif' ORDER BY tarih, saat");
+    const gecmisEtkinlikler = await pool.query("SELECT * FROM etkinlikler WHERE durum = 'gecmis' ORDER BY bitis_tarihi DESC, bitis_saati DESC");
+    res.render('isci-etkinlikler', {
+        user: req.session.user,
+        aktifEtkinlikler: aktifEtkinlikler.rows,
+        gecmisEtkinlikler: gecmisEtkinlikler.rows
+    });
+});
+
+// Etkinlik silme (sadece oluşturan sendikacı)
+app.post('/sendikaci/etkinlik-sil/:id', async (req, res) => {
+    if (!req.session.userId || req.session.userType !== 'sendikaci') {
+        return res.status(403).send('Yetkisiz erişim');
+    }
+    const etkinlikId = req.params.id;
+    // Sadece oluşturan kişi silebilir
+    const result = await pool.query('SELECT * FROM etkinlikler WHERE id = $1', [etkinlikId]);
+    if (!result.rows.length) return res.status(404).send('Etkinlik bulunamadı');
+    const etkinlik = result.rows[0];
+    if (etkinlik.olusturan_id !== req.session.userId) {
+        return res.status(403).send('Sadece kendi oluşturduğunuz etkinliği silebilirsiniz.');
+    }
+    await pool.query('DELETE FROM etkinlikler WHERE id = $1', [etkinlikId]);
+    res.redirect('/sendikaci/etkinlik-yonetim');
 }); 
