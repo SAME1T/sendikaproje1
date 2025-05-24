@@ -238,4 +238,19 @@ router.get('/active-survey-count', async (req, res) => {
   }
 });
 
+// Aktif ve geçmiş etkinlik sayılarını getir
+router.get('/event-counts', async (req, res) => {
+  try {
+    const pool = require('../db');
+    const currentResult = await pool.query("SELECT COUNT(*) FROM etkinlikler WHERE durum = 'aktif'");
+    const pastResult = await pool.query("SELECT COUNT(*) FROM etkinlikler WHERE durum = 'gecmis'");
+    res.json({
+      current: parseInt(currentResult.rows[0].count, 10),
+      past: parseInt(pastResult.rows[0].count, 10)
+    });
+  } catch (error) {
+    res.status(500).json({ error: 'Etkinlik sayıları alınamadı' });
+  }
+});
+
 module.exports = router; 

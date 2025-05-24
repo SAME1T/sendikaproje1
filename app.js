@@ -733,7 +733,8 @@ app.post('/paylasim/:id/sil', async (req, res) => {
         const result = await pool.query('SELECT * FROM paylasimlar WHERE id = $1', [paylasim_id]);
         if (!result.rows.length) return res.status(404).json({ error: 'Paylaşım bulunamadı' });
         const paylasim = result.rows[0];
-        if (paylasim.user_id !== user_id && req.session.userType !== 'sendikaci') {
+        // Sadece paylaşımı oluşturan kişi silebilir
+        if (paylasim.user_id !== user_id) {
             return res.status(403).json({ error: 'Sadece kendi paylaşımınızı silebilirsiniz.' });
         }
         await pool.query('DELETE FROM paylasimlar WHERE id = $1', [paylasim_id]);
@@ -1170,4 +1171,19 @@ app.post('/sendikaci/etkinlik-sil/:id', async (req, res) => {
     }
     await pool.query('DELETE FROM etkinlikler WHERE id = $1', [etkinlikId]);
     res.redirect('/sendikaci/etkinlik-yonetim');
+});
+
+// Bordro silme (sendikacı)
+app.post('/bordro-sil/:id', async (req, res) => {
+  try {
+    if (!req.session.userId || req.session.userType !== 'sendikaci') {
+      return res.status(403).send('Yetkisiz erişim');
+    }
+    const bordroId = req.params.id;
+    await db.Payroll.destroy({ where: { id: bordroId } });
+    res.redirect('/bordro-yonetim');
+  } catch (error) {
+    console.error('Bordro silme hatası:', error);
+    res.status(500).send('Bordro silinemedi');
+  }
 }); 

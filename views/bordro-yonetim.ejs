@@ -99,7 +99,7 @@
                           <input type="month" name="payroll_date" class="form-control" required>
                         </div>
                         <div class="col-md-2">
-                          <label class="form-label">Net Maaş (TL)</label>
+                          <label class="form-label">Net Maaş (TL) <span class="text-muted" style="font-size:0.95em;">(Bordroda yazan net maaş tutarını giriniz.)</span></label>
                           <input type="number" name="amount" class="form-control" step="0.01" min="0" required>
                         </div>
                         <div class="col-md-3">
@@ -165,6 +165,9 @@
                                     <button class="btn btn-outline-secondary btn-sm" disabled><i class="fas fa-download"></i> İndir</button>
                                     <button class="btn btn-outline-secondary btn-sm" disabled><i class="fas fa-eye"></i> Görüntüle</button>
                                   <% } %>
+                                  <form action="/bordro-sil/<%= bordro.id %>" method="POST" style="display:inline;" onsubmit="return confirm('Bu bordroyu silmek istediğinize emin misiniz?');">
+                                    <button type="submit" class="btn btn-danger btn-sm ms-2"><i class="fas fa-trash"></i> Sil</button>
+                                  </form>
                                 </td>
                               </tr>
                             <% }); %>

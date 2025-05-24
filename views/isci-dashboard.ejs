@@ -530,14 +530,6 @@
             <div style="width:100%; height:180px; border-radius:18px; background:linear-gradient(90deg,#43e97b 0%,#38f9d7 100%); background-size:cover; background-position:center; overflow:hidden; position:relative; <%= user.kapak_foto ? `background-image:url('${user.kapak_foto}')` : '' %>">
                 <!-- Sağ üst buton grubu -->
                 <div class="d-flex align-items-center gap-2" style="position:absolute; top:22px; right:32px; z-index:3;">
-                    <!-- Bildirimler -->
-                    <div class="dropdown">
-                        <button class="btn btn-light shadow-sm position-relative" type="button" id="bildirimlerBtn" data-bs-toggle="dropdown" aria-expanded="false" style="border-radius:50%; width:48px; height:48px; display:flex; align-items:center; justify-content:center; font-size:1.5rem;">
-                            <i class="fas fa-bell"></i>
-                            <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="font-size:0.8rem;">3</span>
-                        </button>
-                        <ul class="dropdown-menu dropdown-menu-end shadow" aria-labelledby="bildirimlerBtn" style="min-width:320px;"></ul>
-                    </div>
                     <!-- Ayarlar -->
                     <a href="/ayarlar" class="btn btn-light shadow-sm" style="border-radius:50%; width:48px; height:48px; display:flex; align-items:center; justify-content:center; font-size:1.5rem;"><i class="fas fa-cog"></i></a>
                     <!-- Çıkış -->
@@ -596,9 +588,9 @@
             <div class="col-md-3 mb-4">
                 <div class="card text-center">
                     <div class="card-body">
-                        <i class="fas fa-bullhorn fa-3x mb-3 text-warning"></i>
-                        <h5 class="card-title">Duyurular</h5>
-                        <p class="card-text display-4">5</p>
+                        <i class="fas fa-bolt fa-3x mb-3 text-warning"></i>
+                        <h5 class="card-title">Aktiflik Puanı</h5>
+                        <p class="card-text display-4"><%= aktiflikPuani %></p>
                     </div>
                 </div>
             </div>
@@ -607,7 +599,10 @@
                     <div class="card-body">
                         <i class="fas fa-calendar-alt fa-3x mb-3 text-info"></i>
                         <h5 class="card-title">Etkinlikler</h5>
-                        <p class="card-text display-4">4</p>
+                        <p class="card-text display-4" style="font-size:2.2rem;">
+                            <span id="event-current-count">0</span> <span style="font-size:1.2rem; color:#333;">|</span> <span id="event-past-count">0</span>
+                        </p>
+                        <div style="font-size:1rem; color:#666;">Güncel | Geçmiş</div>
                     </div>
                 </div>
             </div>
@@ -717,7 +712,7 @@
                                 <% if (p.gizlilik === 'ozel') { %>
                                     <span class="privacy-badge">Gizli</span>
                                 <% } %>
-                                <% if (user.id === p.user_id || user.rol === 2) { %>
+                                <% if (user.id === p.user_id) { %>
                                     <button class="btn btn-sm btn-danger ms-auto sil-paylasim-btn" title="Sil"><i class="fas fa-trash"></i></button>
                                 <% } %>
                             </div>
@@ -915,6 +910,14 @@
             document.getElementById('active-survey-count').innerText = data.count;
           });
 
+        // Etkinlik sayısı için ek
+        fetch('/api/event-counts')
+          .then(res => res.json())
+          .then(data => {
+            document.getElementById('event-current-count').innerText = data.current;
+            document.getElementById('event-past-count').innerText = data.past;
+          });
+
         // AJAX ile beğeni ve yorum işlemleri
         function loadYorumlar(paylasimId, card) {
             fetch(`/paylasim/${paylasimId}/yorumlar`).then(r=>r.json()).then(data=>{
@@ -1055,39 +1058,6 @@
             document.getElementById('mediaModal').onclick = function(e){
                 if(e.target === this) closeMediaModal();
             };
-        });
-
-        // Bildirimler açılır menüsünü AJAX ile doldur
-        function loadBildirimler() {
-            fetch('/api/bildirimler')
-                .then(r => r.json())
-                .then(data => {
-                    const menu = document.querySelector('#bildirimlerBtn + .dropdown-menu');
-                    menu.innerHTML = '';
-                    if (!data.length) {
-                        menu.innerHTML = '<li><span class="dropdown-item text-muted">Hiç bildiriminiz yok.</span></li>';
-                        return;
-                    }
-                    menu.innerHTML += '<li><h6 class="dropdown-header">Bildirimler</h6></li>';
-                    data.forEach(b => {
-                        let icon = b.tip === 'yorum' ? '<i class="fas fa-comment text-primary me-2"></i>' : '<i class="fas fa-heart text-danger me-2"></i>';
-                        let text = b.tip === 'yorum'
-                            ? `${icon}<b>${b.bildiren_ad} ${b.bildiren_soyad}</b> gönderine yorum yaptı: <span class="text-dark">"${b.yorum_icerik}"</span>`
-                            : `${icon}<b>${b.bildiren_ad} ${b.bildiren_soyad}</b> gönderini beğendi.`;
-                        menu.innerHTML += `<li><a class="dropdown-item bildirim-link" href="#paylasim-${b.paylasim_id}">${text}<br><small class='text-muted'>${new Date(b.tarih).toLocaleString('tr-TR')}</small></a></li>`;
-                    });
-                    menu.innerHTML += '<li><hr class="dropdown-divider"></li>';
-                    menu.innerHTML += '<li><a class="dropdown-item text-center text-primary" href="#">Tümünü Gör</a></li>';
-                });
-        }
-        document.getElementById('bildirimlerBtn').addEventListener('click', loadBildirimler);
-        // Bildirime tıklanınca ilgili postun olduğu yere git
-        // (Eğer başka bir sayfadaysa yönlendirme yapılabilir, burada anchor scroll)
-        document.addEventListener('click', function(e) {
-            if (e.target.classList.contains('bildirim-link')) {
-                // Menü kapansın
-                setTimeout(() => document.body.click(), 100);
-            }
         });
 
         // Bootstrap modal nesnesini oluştur
