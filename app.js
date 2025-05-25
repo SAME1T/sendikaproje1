@@ -64,6 +64,7 @@ const mediaUpload = multer({
 });
 
 const { aktiflikPuaniHesapla, sendikaUcretiHesapla } = require('./utils/aktiflikHesaplama');
+const newsService = require('./services/newsService');
 
 const app = express();
 
@@ -116,8 +117,16 @@ app.use((err, req, res, next) => {
 });
 
 // Routes
-app.get('/', (req, res) => {
-    res.render('index');
+app.get('/', async (req, res) => {
+    try {
+        // Sendika.org'dan güncel haberleri çek
+        const haberler = await newsService.getLatestNews(10);
+        res.render('index', { haberler });
+    } catch (error) {
+        console.error('Ana sayfa yükleme hatası:', error);
+        // Hata durumunda boş haber listesi ile sayfayı yükle
+        res.render('index', { haberler: [] });
+    }
 });
 
 // Giriş sayfaları rotaları
@@ -416,6 +425,14 @@ app.get('/dashboard/sendikaci', async (req, res) => {
             'SELECT COUNT(*) as count FROM users WHERE rol = 2'
         );
         const uyeSayisi = result.rows[0].count;
+        
+        // Toplantı sayısını çek (sendikacının oluşturduğu veya katıldığı toplantılar)
+        const toplantiResult = await pool.query(`
+            SELECT COUNT(*) as count FROM toplantilar 
+            WHERE olusturan_id = $1 OR (katilimcilar IS NOT NULL AND (',' || katilimcilar || ',') LIKE '%,' || $1::text || ',%')
+        `, [req.session.userId]);
+        const toplantiSayisi = toplantiResult.rows[0].count;
+        
         // Tüm işçileri ve sendikacıları çek (kişiye özel paylaşım için)
         const isciler = await pool.query('SELECT id, ad, soyad FROM users WHERE rol = 1');
         const sendikacilar = await pool.query('SELECT id, ad, soyad FROM users WHERE rol = 2');
@@ -427,6 +444,7 @@ app.get('/dashboard/sendikaci', async (req, res) => {
             uyeSayisi: uyeSayisi,
             activeTab: 'dashboard',
             aktiflikPuani: aktiflikPuani,
+            toplantiSayisi: toplantiSayisi,
             saatlikMaas: ucretBilgisi.saatlikMaas,
             ucret: ucretBilgisi.ucret,
             kullanicilar: kullanicilar, // kişiye özel paylaşım için

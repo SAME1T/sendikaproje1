@@ -495,6 +495,17 @@
         <!-- Manşet ve Yan Haberler -->
         <div class="row mb-4">
             <div class="col-lg-8 mb-4 mb-lg-0">
+                <% if (haberler && haberler.length > 0) { %>
+                <div class="headline-slider">
+                    <img src="<%= haberler[0].image %>" alt="<%= haberler[0].title %>">
+                    <div class="headline-content">
+                        <span class="badge bg-danger"><%= haberler[0].category || 'Öne Çıkan' %></span>
+                        <h2 class="mt-2"><%= haberler[0].title %></h2>
+                        <p><%= haberler[0].summary %></p>
+                        <a href="<%= haberler[0].link %>" target="_blank" class="btn btn-light btn-sm mt-2">Devamını Oku</a>
+                    </div>
+                </div>
+                <% } else { %>
                 <div class="headline-slider">
                     <img src="https://picsum.photos/800/400" alt="Manşet Haber">
                     <div class="headline-content">
@@ -503,9 +514,23 @@
                         <p>Tüm işçi ve emekçilerin katılımıyla gerçekleşecek 1 Mayıs etkinlikleri için hazırlıklar devam ediyor.</p>
                     </div>
                 </div>
+                <% } %>
             </div>
             <div class="col-lg-4">
                 <div class="d-flex flex-column gap-4">
+                    <% if (haberler && haberler.length > 1) { %>
+                        <% for (let i = 1; i < Math.min(3, haberler.length); i++) { %>
+                        <div class="small-news">
+                            <img src="<%= haberler[i].image %>" alt="<%= haberler[i].title %>">
+                            <div class="card-body">
+                                <span class="badge bg-primary"><%= haberler[i].category || 'Gündem' %></span>
+                                <h5 class="card-title mt-2"><%= haberler[i].title %></h5>
+                                <p class="card-text"><%= haberler[i].summary %></p>
+                                <a href="<%= haberler[i].link %>" target="_blank" class="btn btn-outline-primary btn-sm">Devamını Oku</a>
+                            </div>
+                        </div>
+                        <% } %>
+                    <% } else { %>
                     <div class="small-news">
                         <img src="https://picsum.photos/400/200" alt="Haber">
                         <div class="card-body">
@@ -522,6 +547,7 @@
                             <p class="card-text">Yargıtay'dan emsal karar: İşçi hakları genişletildi...</p>
                         </div>
                     </div>
+                    <% } %>
                 </div>
             </div>
                 </div>
@@ -536,6 +562,41 @@
                         <a href="#" class="text-decoration-none">Tümünü Göster</a>
                     </div>
                     <div class="row g-4 news-grid">
+                        <% if (haberler && haberler.length > 3) { %>
+                            <% for (let i = 3; i < Math.min(6, haberler.length); i++) { %>
+                                <% if (i === 3) { %>
+                                <div class="col-12">
+                                    <div class="card border-0 shadow-sm hover-card">
+                                        <div class="row g-0">
+                                            <div class="col-md-4">
+                                                <img src="<%= haberler[i].image %>" class="img-fluid rounded-start h-100 object-fit-cover" alt="<%= haberler[i].title %>">
+                                            </div>
+                                            <div class="col-md-8">
+                                                <div class="card-body">
+                                                    <span class="badge bg-danger mb-2"><%= haberler[i].category || 'Önemli' %></span>
+                                                    <h5 class="card-title"><%= haberler[i].title %></h5>
+                                                    <p class="card-text"><%= haberler[i].date %></p>
+                                                    <a href="<%= haberler[i].link %>" target="_blank" class="btn btn-outline-primary btn-sm">Devamını Oku</a>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <% } else { %>
+                                <div class="col-md-6">
+                                    <div class="card border-0 shadow-sm hover-card">
+                                        <img src="<%= haberler[i].image %>" class="card-img-top" alt="<%= haberler[i].title %>">
+                                        <div class="card-body">
+                                            <span class="badge bg-primary mb-2"><%= haberler[i].category || 'Gündem' %></span>
+                                            <h5 class="card-title"><%= haberler[i].title %></h5>
+                                            <p class="card-text"><%= haberler[i].date %></p>
+                                            <a href="<%= haberler[i].link %>" target="_blank" class="btn btn-outline-primary btn-sm">Devamını Oku</a>
+                                        </div>
+                                    </div>
+                                </div>
+                                <% } %>
+                            <% } %>
+                        <% } else { %>
                         <div class="col-12">
                             <div class="card border-0 shadow-sm hover-card">
                                 <div class="row g-0">
@@ -572,6 +633,7 @@
                                 </div>
                             </div>
                         </div>
+                        <% } %>
                     </div>
                 </div>
 
@@ -621,6 +683,17 @@
                 <!-- Son Dakika Haberleri -->
                 <div class="latest-news mb-4">
                     <h5 class="section-title">Gündem</h5>
+                    <% if (haberler && haberler.length > 6) { %>
+                        <% for (let i = 6; i < Math.min(9, haberler.length); i++) { %>
+                        <div class="latest-news-item">
+                            <span class="category-badge bg-danger"><%= haberler[i].category || 'Önemli' %></span>
+                            <a href="<%= haberler[i].link %>" target="_blank" class="text-decoration-none text-dark">
+                                <span><%= haberler[i].title %></span>
+                            </a>
+                            <small class="d-block text-muted mt-1"><%= haberler[i].date %></small>
+                        </div>
+                        <% } %>
+                    <% } else { %>
                     <div class="latest-news-item">
                         <span class="category-badge bg-danger">Önemli</span>
                         <span>Eylem Kesgin: "Taksim için kararlı olanlarla ortak bir hareket yaratmalıyız"</span>
@@ -630,12 +703,13 @@
                         <span class="category-badge bg-info">Gündem</span>
                         <span>23 Nisan, egemenlik ve Kanal İstanbul – Çiğdem Toker</span>
                         <small class="d-block text-muted mt-1">23 Nisan 2025 09:14</small>
-        </div>
+                    </div>
                     <div class="latest-news-item">
                         <span class="category-badge bg-primary">Analiz</span>
                         <span>Toplumsal halet-i ruhiye... – Mürüvet Küçük</span>
                         <small class="d-block text-muted mt-1">22 Nisan 2025 10:47</small>
-            </div>
+                    </div>
+                    <% } %>
                 </div>
 
                 <!-- Yazarlarımız -->
